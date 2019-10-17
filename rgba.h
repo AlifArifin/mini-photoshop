@@ -8,4 +8,11 @@ struct RGBA {
     short a;
 };
 
+struct RGBAFloat {
+    float r;
+    float g;
+    float b;
+    float a;
+};
+
 #endif

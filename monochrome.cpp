@@ -349,7 +349,7 @@ Histogram Monochrome::generateHistogram() {
     }
 
     histogram.var = var;
-    histogram.std = pow(var, 0.2);
+    histogram.std = pow(var, 0.5);
 
     return histogram;
 }

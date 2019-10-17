@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "operation.h"
 #include "transformation.h"
+#include "geometry.h"
 #include <vector>
 #include <stdio.h>
 #include <QDebug>
@@ -289,6 +290,234 @@ Truecolor Truecolor::operation(Truecolor *m, Operation o, short level) {
             mNew.pixel[i][j].r = Image::clipping(temp.r, level);
             mNew.pixel[i][j].g = Image::clipping(temp.g, level);
             mNew.pixel[i][j].b = Image::clipping(temp.b, level);
+        }
+    }
+
+    return mNew;
+}
+
+Truecolor Truecolor::translastion(int m, int n) {
+    Truecolor mNew(
+        this->imageFormat,
+        this->imageType,
+        this->resolution, 
+        this->level
+    );
+
+    int tempY = -n;
+    for (int i = 0; i < resolution.height; i++) {
+        int tempX = m;
+        for (int j = 0; j < resolution.width; j++) {
+            if (tempX >= 0 && tempX < resolution.width && tempY >= 0 && tempY < resolution.height) {
+                mNew.pixel[tempY][tempX] = this->pixel[i][j];
+            }
+            tempX++;
+        }
+        tempY++;
+    }
+
+    return mNew;
+}
+
+Truecolor geometry(Geometry degree) {
+    Resolution newResolution;
+
+    switch (geo) {
+        case (Geometry::ROTATION_90) :
+        case (Geometry::ROTATION_270) :
+        case (Geometry::MIRROR_X_Y) : {
+            newResolution.height = this->resolution.width;
+            newResolution.width = this->resolution.height;
+            break;
+        }
+        default : {
+            newResolution.height = this->resolution.height;
+            newResolution.width = this->resolution.width;
+            break;
+        }
+    }
+
+    Truecolor mNew(
+        this->imageFormat,
+        this->imageType,
+        newResolution, 
+        this->level
+    );
+
+    int p = resolution.height - 1;
+    for (int i = 0; i < resolution.height; i++, p--) {
+        int q = resolution.width - 1;
+        for (int j = 0; j < resolution.width; j++, q--) {
+            switch (geo) {
+                case (Geometry::ROTATION_0) : {
+                    mNew.pixel[i][j] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::ROTATION_90) : {
+                    mNew.pixel[q][i] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::ROTATION_180) : {
+                    mNew.pixel[p][q] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::ROTATION_270) : {
+                    mNew.pixel[q][p] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::FLIPPING_HORIZONTAL) : {
+                    mNew.pixel[i][q] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::FLIPPING_VERTICAL) : {
+                    mNew.pixel[p][j] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::MIRROR_CARTESIAN) : {
+                    mNew.pixel[p][q] = this->pixel[i][j];
+                    break;
+                }
+                case (Geometry::MIRROR_X_Y) : {
+                    mNew.pixel[j][i] = this->pixel[i][j];
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+    }
+
+    return mNew;
+}
+
+Histogram generateHistogram(PPMColorState color) {
+    Histogram histogram;
+    histogram.size = this->level + 1;
+    histogram.value = new int[histogram.size];
+    histogram.norm = new float[histogram.size];
+
+    long totalPixel = this->resolution.height * this->resolution.width;
+
+    for (int i = 0; i < histogram.size; i++) {
+        histogram.value[i] = 0;
+    }
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            if (color == PPMColorState::RED) {
+                histogram.value[this->pixel[i][j].r] += 1;
+            } else if (color == PPMColorState::GREEN) {
+                histogram.value[this->pixel[i][j].g] += 1;
+            } else if (color == PPMColorState::BLUE) {
+                histogram.value[this->pixel[i][j].b] += 1;
+            }
+        }
+    }
+
+    int temp = 0;
+    long sum = 0;
+    for (int i = 0; i < histogram.size; i++) {
+        temp = histogram.value[i] > temp ? histogram.value[i] : temp;
+        sum += histogram.value[i] * i;
+        histogram.norm[i] = (float) histogram.value[i] / totalPixel;
+    }
+
+    histogram.max = temp;
+    histogram.mean = (float) sum / totalPixel;
+
+    double var = 0;
+    for (int i = 0; i < histogram.size; i++) {
+        var += pow(i - histogram.mean, 2) * histogram.value[i];
+    }
+
+    histogram.var = var;
+    histogram.std = pow(var, 0.5);
+
+    return histogram;
+}
+
+Truecolor Truecolor::convolution(Convolution c, Padding pad, int size, float** kernel) {
+    qInfo("convol");
+    Monochrome mNew(
+        ImageFormat::NONE,
+        this->imageType,
+        this->resolution, 
+        this->level
+    );
+
+    if (size % 2 != 1) {
+        throw "kernel must be odd";
+    }
+
+    int offset = (size - 1) / 2;
+    int length = size * size;
+    short * arrayr = new short[length];
+    short * arrayg = new short[length];
+    short * arrayb = new short[length];
+
+    qInfo("convol");
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        qInfo("convol");
+        for (int j = 0; j < this->resolution.width; j++) {
+            if (i >= offset && j >= offset && i < this->resolution.height - offset && j < this->resolution.width - offset) {
+                RGBAFloat temp;
+                temp.r = 0;
+                temp.g = 0;
+                temp.b = 0;
+                int m = 0;
+                for (int p = i - offset; m < size; p++, m++) {
+                    int n = 0;
+                    for (int q = j - offset; n < size; q++, n++) {
+                        switch (c) {
+                            case (Convolution::BASIC) : {
+                                temp.r += this->pixel[p][q].r * kernel[m][n];
+                                temp.g += this->pixel[p][q].g * kernel[m][n];
+                                temp.b += this->pixel[p][q].b * kernel[m][n];
+                                break;
+                            }
+                            case (Convolution::MEDIAN) : {
+                                arrayr[m * size + n] = this->pixel[p][q].r;
+                                arrayg[m * size + n] = this->pixel[p][q].g;
+                                arrayb[m * size + n] = this->pixel[p][q].b;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                switch (c) {
+                    case (Convolution::NO_CLIPPING) : {
+                        mNew.pixel[i][j].r = (short) temp.r;
+                        mNew.pixel[i][j].g = (short) temp.g;
+                        mNew.pixel[i][j].b = (short) temp.b;
+                        break;
+                    }
+                    case (Convolution::BASIC) : {
+                        mNew.pixel[i][j].r = Image::clipping((short) temp.r, this->level);
+                        mNew.pixel[i][j].g = Image::clipping((short) temp.g, this->level);
+                        mNew.pixel[i][j].b = Image::clipping((short) temp.b, this->level);
+                        break;
+                    }
+                    case (Convolution::MEDIAN) : {
+                        sort(arrayr, arrayr + length);
+                        sort(arrayg, arrayg + length);
+                        sort(arrayb, arrayb + length);
+                        mNew.pixel[i][j].r = arrayr[((length - 1)/2)];
+                        mNew.pixel[i][j].g = arrayg[((length - 1)/2)];
+                        mNew.pixel[i][j].b = arrayb[((length - 1)/2)];
+                        break;
+                    }
+                }
+            } else {
+                switch (pad) {
+                    case (Padding::SAME) : {
+                        mNew.pixel[i][j] = this->pixel[i][j];
+                        break;
+                    }
+                }
+            }
         }
     }
 

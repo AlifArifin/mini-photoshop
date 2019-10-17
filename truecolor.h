@@ -29,6 +29,10 @@ public:
     Truecolor negative();
     Truecolor brightening(float b, Operation o = Operation::ADD);
     Truecolor operation(Truecolor * m, Operation o, short level = 255);
+    Truecolor translastion(int m, int n);
+    Truecolor geometry(Geometry degree);
+    Histogram generateHistogram(PPMColorState color);
+    Truecolor convolution(Convolution c, Padding pad, int size, float** kernel);
 };
 
 #endif
