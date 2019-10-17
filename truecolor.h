@@ -12,6 +12,7 @@ private:
 
 public:
     Truecolor(ifstream * file, ImageFormat imageFormat, ImageType ImageType);
+    Truecolor(Resolution resolution, ImageFormat imageFormat, ImageType ImageType, int level);
     Truecolor(const Truecolor & truecolor);
 
     // getter setter
@@ -23,6 +24,11 @@ public:
     int getLevel();
     void setLevel(int level);
     void save (string filename);
+
+    // image processing
+    Truecolor negative();
+    Truecolor brightening(float b, Operation o = Operation::ADD);
+    Truecolor operation(Truecolor * m, Operation o, short level = 255);
 };
 
 #endif

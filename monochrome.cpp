@@ -204,6 +204,10 @@ Monochrome Monochrome::operation(Monochrome *m, Operation o, short level) {
                     temp = abs(this->pixel[i][j]) + abs(m->pixel[i][j]);
                     break;
                 }
+                case (Operation::DIVISION) : {
+                    temp = (short) (float)this->pixel[i][j] / m->pixel[i][j];
+                    break;
+                }
                 default : {
                     break;
                 }

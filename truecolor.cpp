@@ -3,6 +3,8 @@
 #include "image_type.h"
 #include "ppm_state.h"
 #include "utils.h"
+#include "operation.h"
+#include "transformation.h"
 #include <vector>
 #include <stdio.h>
 #include <QDebug>
@@ -96,6 +98,21 @@ Truecolor::Truecolor(ifstream * file, ImageFormat imageFormat, ImageType imageTy
     }
 }
 
+Truecolor(Resolution resolution, ImageFormat imageFormat, ImageType ImageType, int level) : Image(imageFormat, imageType) {
+    this->level = level;
+    this->resolution = resolution;
+    this->pixel = new RGBA*[resolution.height];
+    for (int i = 0; i < resolution.height; i++) {
+        this->pixel[i] = new RGBA[resolution.width];
+        for (int j = 0; j < resolution.width; j++) {
+            this->pixel[i][j].r = 0;
+            this->pixel[i][j].g = 0;
+            this->pixel[i][j].b = 0;
+            this->pixel[i][j].a = 0;
+        }
+    }
+}
+
 Truecolor::Truecolor(const Truecolor & truecolor) {
     this->level = truecolor.level;
     this->pixel = new RGBA*[this->resolution.height];
@@ -137,4 +154,143 @@ void Truecolor::setLevel(int level) {
 
 void Truecolor::save(string filename) {
 
+}
+
+Truecolor Truecolor::negative() {
+    Truecolor mNew(
+        this->imageFormat,
+        this->imageType,
+        this->resolution,
+        this->level
+    );
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            mNew.pixel[i][j].r = this->level - this->pixel[i][j].r;
+            mNew.pixel[i][j].g = this->level - this->pixel[i][j].g;
+            mNew.pixel[i][j].b = this->level - this->pixel[i][j].b;
+        }
+    }
+
+    return mNew;
+}
+
+Truecolor Truecolor::brightening(float b, Operation o) {
+    Truecolor mNew(
+        this->imageFormat,
+        this->imageType,
+        this->resolution, 
+        this->level
+    );
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            RGBA temp;
+
+            switch (o) {
+                case (Operation::ADD) : {
+                    temp.r = (short) (this->pixel[i][j].r + b);
+                    temp.g = (short) (this->pixel[i][j].g + b);
+                    temp.b = (short) (this->pixel[i][j].b + b);
+                    break;
+                }
+                case (Operation::SUBTRACT) : {
+                    temp.r = (short) (this->pixel[i][j].r - b);
+                    temp.g = (short) (this->pixel[i][j].g - b);
+                    temp.b = (short) (this->pixel[i][j].b - b);
+                    break;
+                }
+                case (Operation::MULTIPLY) : {
+                    temp.r = (short) (this->pixel[i][j].r * b);
+                    temp.g = (short) (this->pixel[i][j].g * b);
+                    temp.b = (short) (this->pixel[i][j].b * b);
+                    break;
+                }
+                case (Operation::DIVISION) : {
+                    temp.r = (short) ((float) this->pixel[i][j].r / b);
+                    temp.g = (short) ((float) this->pixel[i][j].g / b);
+                    temp.b = (short) ((float) this->pixel[i][j].b / b);
+                    break;
+                }
+            }
+
+            mNew.pixel[i][j].r = Image::clipping(temp.r, level);
+            mNew.pixel[i][j].g = Image::clipping(temp.g, level);
+            mNew.pixel[i][j].b = Image::clipping(temp.b, level);
+        }
+    }
+
+    return mNew;
+}
+
+Truecolor Truecolor::operation(Truecolor *m, Operation o, short level) {
+    // check if same
+    if (!Image::sameResolution(this->resolution, m->resolution)) {
+        throw "Images have different resolution";
+    }
+
+    Truecolor mNew(
+        ImageFormat::NONE, 
+        ImageType::TRUECOLOR,
+        this->resolution, 
+        level
+    );
+    
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            RGBA temp;
+            switch (o) {
+                case (Operation::ADD) : {
+                    temp.r = this->pixel[i][j].r + m->pixel[i][j].r;
+                    temp.g = this->pixel[i][j].g + m->pixel[i][j].g;
+                    temp.b = this->pixel[i][j].b + m->pixel[i][j].b;
+                    break;
+                }
+                case (Operation::SUBTRACT) : {
+                    temp.r = this->pixel[i][j].r - m->pixel[i][j].r;
+                    temp.g = this->pixel[i][j].g - m->pixel[i][j].g;
+                    temp.b = this->pixel[i][j].b - m->pixel[i][j].b;
+                    break;
+                }
+                case (Operation::MULTIPLY) : {
+                    temp.r = this->pixel[i][j].r * m->pixel[i][j].r;
+                    temp.g = this->pixel[i][j].g * m->pixel[i][j].g;
+                    temp.b = this->pixel[i][j].b * m->pixel[i][j].b;
+                    break;
+                }
+                case (Operation::AND) : {
+                    temp.r = this->pixel[i][j].r & m->pixel[i][j].r;
+                    temp.g = this->pixel[i][j].g & m->pixel[i][j].g;
+                    temp.b = this->pixel[i][j].b & m->pixel[i][j].b;
+                    break;
+                }
+                case (Operation::OR) : {
+                    temp.r = this->pixel[i][j].r | m->pixel[i][j].r;
+                    temp.g = this->pixel[i][j].g | m->pixel[i][j].g;
+                    temp.b = this->pixel[i][j].b | m->pixel[i][j].b;
+                    break;
+                }
+                case (Operation::ADD_ABS) : {
+                    temp.r = abs(this->pixel[i][j].r) + abs(m->pixel[i][j].r);
+                    temp.g = abs(this->pixel[i][j].g) + abs(m->pixel[i][j].g);
+                    temp.b = abs(this->pixel[i][j].b) + abs(m->pixel[i][j].b);
+                    break;
+                }
+                case (Operation::DIVISION) : {
+                    temp.r = (short) (float) this->pixel[i][j].r / m->pixel[i][j].r;
+                    temp.g = (short) (float) this->pixel[i][j].g / m->pixel[i][j].g;
+                    temp.b = (short) (float) this->pixel[i][j].b / m->pixel[i][j].b;
+                    break;
+                }
+                default : {
+                    break;
+                }
+            }
+            mNew.pixel[i][j].r = Image::clipping(temp.r, level);
+            mNew.pixel[i][j].g = Image::clipping(temp.g, level);
+            mNew.pixel[i][j].b = Image::clipping(temp.b, level);
+        }
+    }
+
+    return mNew;
 }
