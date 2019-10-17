@@ -99,7 +99,7 @@ Truecolor::Truecolor(ifstream * file, ImageFormat imageFormat, ImageType imageTy
     }
 }
 
-Truecolor(Resolution resolution, ImageFormat imageFormat, ImageType ImageType, int level) : Image(imageFormat, imageType) {
+Truecolor::Truecolor(ImageFormat imageFormat, ImageType ImageType, Resolution resolution, int level) : Image(imageFormat, imageType) {
     this->level = level;
     this->resolution = resolution;
     this->pixel = new RGBA*[resolution.height];
@@ -319,7 +319,7 @@ Truecolor Truecolor::translastion(int m, int n) {
     return mNew;
 }
 
-Truecolor geometry(Geometry degree) {
+Truecolor Truecolor::geometry(Geometry geo) {
     Resolution newResolution;
 
     switch (geo) {
@@ -391,7 +391,7 @@ Truecolor geometry(Geometry degree) {
     return mNew;
 }
 
-Histogram generateHistogram(PPMColorState color) {
+Histogram Truecolor::generateHistogram(PPMColorState color) {
     Histogram histogram;
     histogram.size = this->level + 1;
     histogram.value = new int[histogram.size];
@@ -524,9 +524,9 @@ Truecolor Truecolor::convolution(Convolution c, Padding pad, int size, float** k
     return mNew;
 }
 
-Truecolor Truecolor::sharpening(Truecolor * lowPass, float alpha = 1) {
-    Monochrome highPass = this->operation(lowPass, Operation::SUBTRACT, this->level);
-    Monochrome sharp = (this->brightening(alpha, Operation::MULTIPLY)).operation(&highPass, Operation::ADD, this->level);
+Truecolor Truecolor::sharpening(Truecolor * lowPass, float alpha) {
+    Truecolor highPass = this->operation(lowPass, Operation::SUBTRACT, this->level);
+    Truecolor sharp = (this->brightening(alpha, Operation::MULTIPLY)).operation(&highPass, Operation::ADD, this->level);
 
     return sharp;
 }
@@ -539,7 +539,7 @@ Truecolor Truecolor::histogramLeveling() {
     Mapping mg = Image::histogramStretching(hg);
     Mapping mb = Image::histogramStretching(hb);
 
-    Monochrome mNew(
+    Truecolor mNew(
         this->imageFormat,
         this->imageType,
         this->resolution, 
@@ -562,7 +562,7 @@ Truecolor Truecolor::histogramSpecification(Histogram hr, Histogram hg, Histogra
     Histogram h2g = this->generateHistogram(PPMColorState::GREEN);
     Histogram h2b = this->generateHistogram(PPMColorState::BLUE);
     
-    if (h2.size != h.size) {
+    if (h2r.size != hr.size) {
         throw "Have different size";
     }
 
@@ -573,7 +573,7 @@ Truecolor Truecolor::histogramSpecification(Histogram hr, Histogram hg, Histogra
     Mapping m2g = Image::histogramStretching(h2g);
     Mapping m2b = Image::histogramStretching(h2b);
 
-    Monochrome mNew(
+    Truecolor mNew(
         this->imageFormat,
         this->imageType,
         this->resolution, 
@@ -600,14 +600,14 @@ Truecolor Truecolor::histogramSpecification(Histogram hr, Histogram hg, Histogra
     short * newMappingb = new short[m1b.size];
 
     // make new mapping
-    for (int i = 0; i < m2.size; i++) {
+    for (int i = 0; i < m2r.size; i++) {
         float min_deltar = 0;
         float nearestr = -1;
         float min_deltag = 0;
         float nearestg = -1;
         float min_deltab = 0;
         float nearestb = -1;
-        for (int j = 0; j < m1.size; j++) {
+        for (int j = 0; j < m1r.size; j++) {
             float tempr = abs(m2r.value[i] - m1r.real[j]);
             float tempg = abs(m2g.value[i] - m1g.real[j]);
             float tempb = abs(m2b.value[i] - m1b.real[j]);

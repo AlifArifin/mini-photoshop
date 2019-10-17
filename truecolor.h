@@ -3,6 +3,12 @@
 
 #include "image.h"
 #include "rgba.h"
+#include "convolution.h"
+#include "transformation.h"
+#include "operation.h"
+#include "ppm_state.h"
+#include "geometry.h"
+#include "padding.h"
 
 class Truecolor : public Image {
 private:
@@ -12,7 +18,7 @@ private:
 
 public:
     Truecolor(ifstream * file, ImageFormat imageFormat, ImageType ImageType);
-    Truecolor(Resolution resolution, ImageFormat imageFormat, ImageType ImageType, int level);
+    Truecolor(ImageFormat imageFormat, ImageType ImageType, Resolution resolution, int level);
     Truecolor(const Truecolor & truecolor);
 
     // getter setter
