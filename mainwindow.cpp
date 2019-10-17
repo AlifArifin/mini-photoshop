@@ -140,10 +140,11 @@ void MainWindow::on_actionOpen_triggered()
         tabPage->setImageType(ImageType::GRAYSCALE);
     } else if (imageType == ImageType::TRUECOLOR) {
         Truecolor truecolor(&file, imageFormat, imageType);
+        qInfo("after ctor");
         height = truecolor.getResolution().height;
         width = truecolor.getResolution().width;
 
-        QImage image(width, height, QImage::Format_Grayscale8);
+        QImage image(width, height, QImage::Format_RGB32);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 RGBA value = truecolor.getIndividualPixel(i, j);
@@ -156,13 +157,18 @@ void MainWindow::on_actionOpen_triggered()
                 image.setPixel(j, i, qRgb(value.r, value.g, value.b));
             }
         }
+        qInfo("after ctor");
         label->setPixmap(QPixmap::fromImage(image));
+        qInfo("after ctor");
         truecolors.push_back(new Truecolor(truecolor));
+        qInfo("after ctor");
         tabPage->setImageType(ImageType::TRUECOLOR);
+        qInfo("after ctor");
     }
 
     label->show();
     tabWidget->addTab(tabPage, splitName[splitName.size() - 1]);
+    qInfo("done");
 }
 
 void MainWindow::on_actionNegative_triggered()

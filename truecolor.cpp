@@ -69,6 +69,7 @@ Truecolor::Truecolor(ifstream * file, ImageFormat imageFormat, ImageType imageTy
                     }
                     case (PPMState::PPM_PIXEL) : {
                         pixels = Utils::split(fileline, ' ');
+                        qInfo(to_string(pixels.size()).c_str());
                         for (size_t i = 0; i < pixels.size(); i++) {
                             if (ppmColorState == PPMColorState::RED) {
                                 this->pixel[p][q].r = stoi(pixels[i]);
@@ -439,7 +440,7 @@ Histogram Truecolor::generateHistogram(PPMColorState color) {
 
 Truecolor Truecolor::convolution(Convolution c, Padding pad, int size, float** kernel) {
     qInfo("convol");
-    Monochrome mNew(
+    Truecolor mNew(
         ImageFormat::NONE,
         this->imageType,
         this->resolution, 
@@ -586,7 +587,7 @@ Truecolor Truecolor::histogramSpecification(Histogram hr, Histogram hg, Histogra
     float incr = 0;
     float incg = 0;
     float incb = 0;
-    for (int i = 0; i < m1.size; i++) {
+    for (int i = 0; i < m1r.size; i++) {
         incr += m1r.real[i];
         cumulativer[i] = incr;
         incg += m1g.real[i];
