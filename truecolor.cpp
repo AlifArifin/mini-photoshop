@@ -523,3 +523,128 @@ Truecolor Truecolor::convolution(Convolution c, Padding pad, int size, float** k
 
     return mNew;
 }
+
+Truecolor Truecolor::sharpening(Truecolor * lowPass, float alpha = 1) {
+    Monochrome highPass = this->operation(lowPass, Operation::SUBTRACT, this->level);
+    Monochrome sharp = (this->brightening(alpha, Operation::MULTIPLY)).operation(&highPass, Operation::ADD, this->level);
+
+    return sharp;
+}
+
+Truecolor Truecolor::histogramLeveling() {
+    Histogram hr = this->generateHistogram(PPMColorState::RED);
+    Histogram hg = this->generateHistogram(PPMColorState::GREEN);
+    Histogram hb = this->generateHistogram(PPMColorState::BLUE);
+    Mapping mr = Image::histogramStretching(hr);
+    Mapping mg = Image::histogramStretching(hg);
+    Mapping mb = Image::histogramStretching(hb);
+
+    Monochrome mNew(
+        this->imageFormat,
+        this->imageType,
+        this->resolution, 
+        this->level
+    );
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            mNew.pixel[i][j].r = mr.value[this->pixel[i][j].r];
+            mNew.pixel[i][j].g = mg.value[this->pixel[i][j].g];
+            mNew.pixel[i][j].b = mb.value[this->pixel[i][j].b];
+        }
+    }
+
+    return mNew;
+}
+
+Truecolor Truecolor::histogramSpecification(Histogram hr, Histogram hg, Histogram hb) {
+    Histogram h2r = this->generateHistogram(PPMColorState::RED);
+    Histogram h2g = this->generateHistogram(PPMColorState::GREEN);
+    Histogram h2b = this->generateHistogram(PPMColorState::BLUE);
+    
+    if (h2.size != h.size) {
+        throw "Have different size";
+    }
+
+    Mapping m1r = Image::histogramStretching(hr);
+    Mapping m1g = Image::histogramStretching(hg);
+    Mapping m1b = Image::histogramStretching(hb);
+    Mapping m2r = Image::histogramStretching(h2r);
+    Mapping m2g = Image::histogramStretching(h2g);
+    Mapping m2b = Image::histogramStretching(h2b);
+
+    Monochrome mNew(
+        this->imageFormat,
+        this->imageType,
+        this->resolution, 
+        this->level
+    );
+
+    float * cumulativer = new float[m1r.size];
+    float * cumulativeg = new float[m1g.size];
+    float * cumulativeb = new float[m1b.size];
+    float incr = 0;
+    float incg = 0;
+    float incb = 0;
+    for (int i = 0; i < m1.size; i++) {
+        incr += m1r.real[i];
+        cumulativer[i] = incr;
+        incg += m1g.real[i];
+        cumulativeg[i] = incg;
+        incb += m1b.real[i];
+        cumulativeb[i] = incb;
+    }
+
+    short * newMappingr = new short[m1r.size];
+    short * newMappingg = new short[m1g.size];
+    short * newMappingb = new short[m1b.size];
+
+    // make new mapping
+    for (int i = 0; i < m2.size; i++) {
+        float min_deltar = 0;
+        float nearestr = -1;
+        float min_deltag = 0;
+        float nearestg = -1;
+        float min_deltab = 0;
+        float nearestb = -1;
+        for (int j = 0; j < m1.size; j++) {
+            float tempr = abs(m2r.value[i] - m1r.real[j]);
+            float tempg = abs(m2g.value[i] - m1g.real[j]);
+            float tempb = abs(m2b.value[i] - m1b.real[j]);
+            if (nearestr < 0) {
+                min_deltar = tempr;
+                nearestr = m1r.real[j];
+            } else if (tempr < min_deltar) {
+                min_deltar = tempr;
+                nearestr = m1r.real[j];
+            }
+            if (nearestg < 0) {
+                min_deltag = tempg;
+                nearestg = m1g.real[j];
+            } else if (tempg < min_deltag) {
+                min_deltag = tempg;
+                nearestg = m1g.real[j];
+            }
+            if (nearestb < 0) {
+                min_deltab = tempb;
+                nearestb = m1b.real[j];
+            } else if (tempb < min_deltab) {
+                min_deltab = tempb;
+                nearestb = m1b.real[j];
+            }
+        }
+        newMappingr[i] = round(nearestr);
+        newMappingg[i] = round(nearestg);
+        newMappingb[i] = round(nearestb);
+    }
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            mNew.pixel[i][j].r = newMappingr[this->pixel[i][j].r];
+            mNew.pixel[i][j].g = newMappingg[this->pixel[i][j].g];
+            mNew.pixel[i][j].b = newMappingb[this->pixel[i][j].b];
+        }
+    }
+
+    return mNew;
+}

@@ -33,6 +33,9 @@ public:
     Truecolor geometry(Geometry degree);
     Histogram generateHistogram(PPMColorState color);
     Truecolor convolution(Convolution c, Padding pad, int size, float** kernel);
+    Truecolor sharpening(Truecolor * lowPass, float alpha = 1);
+    Truecolor histogramLeveling();
+    Truecolor histogramSpecification(Histogram hr,Histogram hg, Histogram hb);
 };
 
 #endif
