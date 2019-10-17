@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>723</width>
+    <height>376</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>723</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionAbout_Image"/>
+   </widget>
+   <widget class="QMenu" name="menuOperations">
+    <property name="title">
+     <string>&amp;Operations</string>
+    </property>
+    <widget class="QMenu" name="menuTwo_Pictures">
+     <property name="title">
+      <string>Arithmatic</string>
+     </property>
+     <addaction name="actionAdd"/>
+     <addaction name="actionSubtract"/>
+     <addaction name="actionMultiply"/>
+     <addaction name="actionDivision"/>
+    </widget>
+    <widget class="QMenu" name="menuBoolean">
+     <property name="title">
+      <string>Boolean</string>
+     </property>
+     <addaction name="actionNot"/>
+     <addaction name="actionAnd"/>
+     <addaction name="actionOr"/>
+    </widget>
+    <widget class="QMenu" name="menuGeometry">
+     <property name="title">
+      <string>Geometry</string>
+     </property>
+     <widget class="QMenu" name="menuFlip">
+      <property name="title">
+       <string>Flip</string>
+      </property>
+      <addaction name="actionVertical"/>
+      <addaction name="actionHorizontal"/>
+     </widget>
+     <widget class="QMenu" name="menuMirror">
+      <property name="title">
+       <string>Mirror</string>
+      </property>
+      <addaction name="actionCartesian"/>
+      <addaction name="actionx_y"/>
+     </widget>
+     <addaction name="actionTranslation"/>
+     <addaction name="actionRotation"/>
+     <addaction name="menuFlip"/>
+     <addaction name="menuMirror"/>
+    </widget>
+    <widget class="QMenu" name="menuBrightening">
+     <property name="title">
+      <string>Brightening</string>
+     </property>
+     <addaction name="actionAdd_2"/>
+     <addaction name="actionSubtract_2"/>
+     <addaction name="actionMultiply_2"/>
+     <addaction name="actionDivision_2"/>
+    </widget>
+    <addaction name="actionNegative"/>
+    <addaction name="actionGrayscale"/>
+    <addaction name="menuBrightening"/>
+    <addaction name="separator"/>
+    <addaction name="menuTwo_Pictures"/>
+    <addaction name="menuBoolean"/>
+    <addaction name="separator"/>
+    <addaction name="menuGeometry"/>
+   </widget>
+   <widget class="QMenu" name="menuHistogram">
+    <property name="title">
+     <string>&amp;Histogram</string>
+    </property>
+    <addaction name="actionNormal"/>
+    <addaction name="actionNormalisasi"/>
+   </widget>
+   <widget class="QMenu" name="menuEnhancement">
+    <property name="title">
+     <string>&amp;Enhancement</string>
+    </property>
+    <widget class="QMenu" name="menuTransformation">
+     <property name="title">
+      <string>Transformation</string>
+     </property>
+     <addaction name="actionLog"/>
+     <addaction name="actionInverse_Log"/>
+     <addaction name="actionPower"/>
+    </widget>
+    <widget class="QMenu" name="menuHigh_Pass_Filter">
+     <property name="title">
+      <string>High Pass Filter</string>
+     </property>
+     <addaction name="action1"/>
+     <addaction name="action2"/>
+     <addaction name="action3"/>
+     <addaction name="action4"/>
+     <addaction name="action5"/>
+     <addaction name="action6"/>
+    </widget>
+    <addaction name="actionContrast_Stretching"/>
+    <addaction name="menuTransformation"/>
+    <addaction name="actionGray_Level_Slicing"/>
+    <addaction name="actionBit_Slicing"/>
+    <addaction name="separator"/>
+    <addaction name="actionHistogram_Leveling"/>
+    <addaction name="actionHistogram_Specification"/>
+    <addaction name="separator"/>
+    <addaction name="actionMedian_Filter"/>
+    <addaction name="menuHigh_Pass_Filter"/>
+    <addaction name="actionUnsharp_Masking"/>
+    <addaction name="actionHighboost_Filter"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuOperations"/>
+   <addaction name="menuHistogram"/>
+   <addaction name="menuEnhancement"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string>&amp;Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionNegative">
+   <property name="text">
+    <string>Negative</string>
+   </property>
+  </action>
+  <action name="actionGrayscale">
+   <property name="text">
+    <string>Grayscale</string>
+   </property>
+  </action>
+  <action name="actionAdd">
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </action>
+  <action name="actionSubtract">
+   <property name="text">
+    <string>Subtract</string>
+   </property>
+  </action>
+  <action name="actionMultiply">
+   <property name="text">
+    <string>Multiply</string>
+   </property>
+  </action>
+  <action name="actionDivision">
+   <property name="text">
+    <string>Division</string>
+   </property>
+  </action>
+  <action name="actionNot">
+   <property name="text">
+    <string>Not</string>
+   </property>
+  </action>
+  <action name="actionAnd">
+   <property name="text">
+    <string>And</string>
+   </property>
+  </action>
+  <action name="actionOr">
+   <property name="text">
+    <string>Or</string>
+   </property>
+  </action>
+  <action name="actionTranslation">
+   <property name="text">
+    <string>Translation</string>
+   </property>
+  </action>
+  <action name="actionRotation">
+   <property name="text">
+    <string>Rotation</string>
+   </property>
+  </action>
+  <action name="actionAdd_2">
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </action>
+  <action name="actionSubtract_2">
+   <property name="text">
+    <string>Subtract</string>
+   </property>
+  </action>
+  <action name="actionMultiply_2">
+   <property name="text">
+    <string>Multiply</string>
+   </property>
+  </action>
+  <action name="actionDivision_2">
+   <property name="text">
+    <string>Division</string>
+   </property>
+  </action>
+  <action name="actionVertical">
+   <property name="text">
+    <string>Vertical</string>
+   </property>
+  </action>
+  <action name="actionHorizontal">
+   <property name="text">
+    <string>Horizontal</string>
+   </property>
+  </action>
+  <action name="actionCartesian">
+   <property name="text">
+    <string>Cartesian</string>
+   </property>
+  </action>
+  <action name="actionx_y">
+   <property name="text">
+    <string>x = y</string>
+   </property>
+  </action>
+  <action name="actionNormal">
+   <property name="text">
+    <string>Normal</string>
+   </property>
+  </action>
+  <action name="actionNormalisasi">
+   <property name="text">
+    <string>Normalisasi</string>
+   </property>
+  </action>
+  <action name="actionAbout_Image">
+   <property name="text">
+    <string>About Image</string>
+   </property>
+  </action>
+  <action name="actionContrast_Stretching">
+   <property name="text">
+    <string>Contrast Stretching</string>
+   </property>
+  </action>
+  <action name="actionLog">
+   <property name="text">
+    <string>Log</string>
+   </property>
+  </action>
+  <action name="actionInverse_Log">
+   <property name="text">
+    <string>Inverse Log</string>
+   </property>
+  </action>
+  <action name="actionPower">
+   <property name="text">
+    <string>Power</string>
+   </property>
+  </action>
+  <action name="actionGray_Level_Slicing">
+   <property name="text">
+    <string>Gray Level Slicing</string>
+   </property>
+  </action>
+  <action name="actionBit_Slicing">
+   <property name="text">
+    <string>Bit Slicing</string>
+   </property>
+  </action>
+  <action name="actionHistogram_Leveling">
+   <property name="text">
+    <string>Histogram Leveling</string>
+   </property>
+  </action>
+  <action name="actionHistogram_Specification">
+   <property name="text">
+    <string>Histogram Specification</string>
+   </property>
+  </action>
+  <action name="actionMedian_Filter">
+   <property name="text">
+    <string>Median Filter</string>
+   </property>
+  </action>
+  <action name="action1">
+   <property name="text">
+    <string>1</string>
+   </property>
+  </action>
+  <action name="action2">
+   <property name="text">
+    <string>2</string>
+   </property>
+  </action>
+  <action name="action3">
+   <property name="text">
+    <string>3</string>
+   </property>
+  </action>
+  <action name="action4">
+   <property name="text">
+    <string>4</string>
+   </property>
+  </action>
+  <action name="action5">
+   <property name="text">
+    <string>5</string>
+   </property>
+  </action>
+  <action name="action6">
+   <property name="text">
+    <string>6</string>
+   </property>
+  </action>
+  <action name="actionUnsharp_Masking">
+   <property name="text">
+    <string>Unsharp Masking</string>
+   </property>
+  </action>
+  <action name="actionHighboost_Filter">
+   <property name="text">
+    <string>Highboost Filter</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
