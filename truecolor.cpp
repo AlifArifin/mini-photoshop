@@ -126,6 +126,21 @@ Truecolor::Truecolor(const Truecolor & truecolor) : Image(truecolor) {
     }
 }
 
+Truecolor::Truecolor(ImageFormat imageFormat, Resolution resolution, int level) : Image(imageFormat, ImageType::TRUECOLOR) {
+    this->level = level;
+    this->resolution = resolution;
+    this->pixel = new RGBA*[resolution.height];
+    for (int i = 0; i < resolution.height; i++) {
+        this->pixel[i] = new RGBA[resolution.width];
+        for (int j = 0; j < resolution.width; j++) {
+            this->pixel[i][j].r = 0;
+            this->pixel[i][j].g = 0;
+            this->pixel[i][j].b = 0;
+            this->pixel[i][j].a = 0;
+        }
+    }
+}
+
 RGBA** Truecolor::getPixel() {
     return this->pixel;
 }
@@ -709,4 +724,48 @@ Truecolor Truecolor::zoom(bool in) {
 
         return mNew;
     }
+}
+
+Truecolor Truecolor::contrastStretching(int a, int b, int ya, int yb, float alpha, float beta, float gamma) {
+    Truecolor gNew(
+        this->imageFormat,
+        this->resolution, 
+        this->level
+    );
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            RGBA temp;
+            if (this->pixel[i][j].r < a) {
+                temp.r = (int) (alpha * this->pixel[i][j].r);
+            } else if (this->pixel[i][j].r >= a && this->pixel[i][j].r < b) {
+                temp.r = (int) (beta * (this->pixel[i][j].r - a) + ya);
+            } else {
+                temp.r = (int) (gamma * (this->pixel[i][j].r - b) + yb);
+            }
+
+            if (this->pixel[i][j].g < a) {
+                temp.g = (int) (alpha * this->pixel[i][j].g);
+            } else if (this->pixel[i][j].r >= a && this->pixel[i][j].g < b) {
+                temp.g = (int) (beta * (this->pixel[i][j].r - a) + ya);
+            } else {
+                temp.g = (int) (gamma * (this->pixel[i][j].r - b) + yb);
+            }
+
+            if (this->pixel[i][j].b < a) {
+                temp.b = (int) (alpha * this->pixel[i][j].r);
+            } else if (this->pixel[i][j].b >= a && this->pixel[i][j].b < b) {
+                temp.b = (int) (beta * (this->pixel[i][j].b - a) + ya);
+            } else {
+                temp.b = (int) (gamma * (this->pixel[i][j].b - b) + yb);
+            }
+
+
+            gNew.pixel[i][j].r = Image::clipping(temp.r, this->level);
+            gNew.pixel[i][j].g = Image::clipping(temp.g, this->level);
+            gNew.pixel[i][j].b = Image::clipping(temp.b, this->level);
+        }
+    }
+
+    return gNew;
 }

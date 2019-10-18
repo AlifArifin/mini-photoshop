@@ -284,7 +284,7 @@ QImage MainWindow::fromTruecolor(Truecolor truecolor) {
     int height = truecolor.getResolution().height;
     int width = truecolor.getResolution().width;
 
-    QImage image(width, height, QImage::Format_Grayscale8);
+    QImage image(width, height, QImage::Format_RGB32);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             RGBA pixel = truecolor.getIndividualPixel(i, j);
@@ -802,12 +802,7 @@ void MainWindow::on_actionContrast_Stretching_triggered()
                 errorMessage("Cannot used for Binary");
                 break;
             } case (ImageType::GRAYSCALE) : {
-                qInfo("lala");
                 Grayscale * g = grayscales.at(imageIdx);
-                qInfo("lala");
-                int a = form.getA();
-                qInfo("getA");
-                //qDebug() << form.getA() << form.getB() << form.getYa() << form.getYb();
                 Monochrome prev = g->contrastStretching(
                             form.getA(),
                             form.getB(),
@@ -827,6 +822,28 @@ void MainWindow::on_actionContrast_Stretching_triggered()
                     QImage newImage = fromMonochrome(prev);
                     label->setPixmap(QPixmap::fromImage(newImage));
                 }
+            } case (ImageType::TRUECOLOR) : {
+                Truecolor * tr = truecolors.at(imageIdx);
+                Truecolor prev = tr->contrastStretching(
+                            form.getA(),
+                            form.getB(),
+                            form.getYa(),
+                            form.getYb(),
+                            form.getAlpha(),
+                            form.getBeta(),
+                            form.getGamma()
+                        );
+                QImage image = this->fromTruecolor(prev);
+
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    truecolors.at(imageIdx) = new Truecolor(prev);
+                    QImage newImage = fromTruecolor(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
             }
         }
     }

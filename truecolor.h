@@ -19,6 +19,7 @@ private:
 public:
     Truecolor(ifstream * file, ImageFormat imageFormat, ImageType ImageType);
     Truecolor(ImageFormat imageFormat, ImageType ImageType, Resolution resolution, int level);
+    Truecolor(ImageFormat imageFormat, Resolution resolution, int level);
     Truecolor(const Truecolor & truecolor);
 
     // getter setter
@@ -43,6 +44,7 @@ public:
     Truecolor histogramLeveling();
     Truecolor histogramSpecification(Histogram hr,Histogram hg, Histogram hb);
     Truecolor zoom(bool in);
+    Truecolor contrastStretching(int a, int b, int ya, int yb, float alpha = 1, float beta = 1, float gamma = 1);
 };
 
 #endif
