@@ -21,6 +21,7 @@
 #include "convolution.h"
 #include "padding.h"
 #include "rgba.h"
+#include "ppm_state.h"
 #include <QFileDialog>
 #include <QTabBar>
 #include <QTabWidget>
@@ -210,6 +211,20 @@ void MainWindow::on_actionNegative_triggered()
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
             break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->negative();
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -345,7 +360,21 @@ void MainWindow::brightening(float c, Operation o) {
                 QImage newImage = fromMonochrome(prev);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
-        break;
+           break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->brightening(c, o);
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -445,6 +474,26 @@ void MainWindow::operations(int idx, Operation o) {
                     errorMessage("Images have different resolution");
                 }
                 break;
+            } case (ImageType::TRUECOLOR) : {
+                Truecolor * tr = truecolors.at(imageIdx);
+                Truecolor * tr2 = truecolors.at(imageIdx2);
+
+                if (Image::sameResolution(tr->getResolution(), tr2->getResolution())) {
+                    Truecolor prev = tr2->operation(tr, o, 1);
+
+                    QImage image = this->fromTruecolor(prev);
+                    ImagePreview imagePreview(this);
+                    imagePreview.setImage(image);
+                    int result = imagePreview.exec();
+                    if (result == QDialog::Accepted) {
+                        truecolors.at(imageIdx) = new Truecolor(prev);
+                        QImage newImage = fromTruecolor(prev);
+                        label->setPixmap(QPixmap::fromImage(newImage));
+                    }
+                } else {
+                    errorMessage("Images have different resolution");
+                }
+                break;
             }
         }
     } else {
@@ -521,7 +570,7 @@ void MainWindow::on_actionAdd_triggered()
 {
     try {
         int c = inputInt("Operation Add", "Insert index");
-        this->brightening(c, Operation::ADD);
+        this->operations(c, Operation::ADD);
     } catch (const char* msg) {
         // do nothing
     }
@@ -531,7 +580,7 @@ void MainWindow::on_actionSubtract_triggered()
 {
     try {
         int c = inputInt("Operation Subtract", "Insert index");
-        this->brightening(c, Operation::SUBTRACT);
+        this->operations(c, Operation::SUBTRACT);
     } catch (const char* msg) {
         // do nothing
     }
@@ -541,7 +590,7 @@ void MainWindow::on_actionMultiply_triggered()
 {
     try {
         int c = inputInt("Operation Multiply", "Insert index");
-        this->brightening(c, Operation::MULTIPLY);
+        this->operations(c, Operation::MULTIPLY);
     } catch (const char* msg) {
         // do nothing
     }
@@ -551,7 +600,7 @@ void MainWindow::on_actionDivision_triggered()
 {
     try {
         int c = inputInt("Operation Division", "Insert index");
-        this->brightening(c, Operation::DIVISION);
+        this->operations(c, Operation::DIVISION);
     } catch (const char* msg) {
         // do nothing
     }
@@ -595,6 +644,20 @@ void MainWindow::geometry(Geometry geom) {
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
         break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->geometry(geom);
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -1162,5 +1225,71 @@ void MainWindow::on_actionIn_triggered()
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
             break;
+        }
+    }
+}
+
+void MainWindow::on_actionOut_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            Monochrome prev = b->zoom(false);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                binaries.at(imageIdx) = new Binary(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        }
+        case (ImageType::GRAYSCALE) : {
+            Grayscale * g = grayscales.at(imageIdx);
+            Monochrome prev = g->zoom(false);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                grayscales.at(imageIdx) = new Grayscale(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionTranslation_triggered()
+{
+
+}
+
+void MainWindow::on_actionRed_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Histogram h = tr->generateHistogram(PPMColorState::RED);
+            histogram(h, false);
+            break;
+        }
     }
 }

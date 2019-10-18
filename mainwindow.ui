@@ -79,10 +79,18 @@
       <addaction name="actionCartesian"/>
       <addaction name="actionx_y"/>
      </widget>
+     <widget class="QMenu" name="menuZoom">
+      <property name="title">
+       <string>Zoom</string>
+      </property>
+      <addaction name="actionIn"/>
+      <addaction name="actionOut"/>
+     </widget>
      <addaction name="actionTranslation"/>
      <addaction name="actionRotation"/>
      <addaction name="menuFlip"/>
      <addaction name="menuMirror"/>
+     <addaction name="menuZoom"/>
     </widget>
     <widget class="QMenu" name="menuBrightening">
      <property name="title">
@@ -352,6 +360,16 @@
   <action name="actionHighboost_Filter">
    <property name="text">
     <string>Highboost Filter</string>
+   </property>
+  </action>
+  <action name="actionIn">
+   <property name="text">
+    <string>In</string>
+   </property>
+  </action>
+  <action name="actionOut">
+   <property name="text">
+    <string>Out</string>
    </property>
   </action>
  </widget>

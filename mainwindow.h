@@ -87,6 +87,10 @@ private slots:
 
     void on_actionUnsharp_Masking_triggered();
 
+    void on_actionIn_triggered();
+
+    void on_actionOut_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;

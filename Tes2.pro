@@ -10,6 +10,7 @@ SOURCES += \
     formcontrast.cpp \
     formgrayslicing.cpp \
     formtransformationlog.cpp \
+    formtranslation.cpp \
     grayscale.cpp \
     image.cpp \
     image_format.cpp \
@@ -30,6 +31,7 @@ FORMS += \
     formcontrast.ui \
     formgrayslicing.ui \
     formtransformationlog.ui \
+    formtranslation.ui \
     imagepreview.ui \
     inputdialog.ui \
     mainwindow.ui \
@@ -45,6 +47,7 @@ HEADERS += \
     formcontrast.h \
     formgrayslicing.h \
     formtransformationlog.h \
+    formtranslation.h \
     geometry.h \
     grayscale.h \
     histogram.h \
