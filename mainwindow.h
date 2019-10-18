@@ -113,6 +113,8 @@ private slots:
 
     void on_action270_triggered();
 
+    void on_actionHistogram_Specification_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;

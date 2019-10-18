@@ -1734,15 +1734,10 @@ void MainWindow::on_actionHistogram_Specification_triggered()
                 Binary * b = binaries.at(imageIdx);
                 Binary * b2 = binaries.at(imageIdx2);
 
-                Monochrome m1 = b->histogramLeveling();
-                Monochrome m2 = b2->histogramLeveling();
+                Histogram h = b->generateHistogram();
 
-                Histogram h1 = m1.generateHistogram();
-                Histogram h2 = m2.generateHistogram();
-
-                if (h1.size == h2.size) {
-                    qInfo("operations");
-                    Monochrome prev = b2->
+                if (b->getLevel() == b2->getLevel()) {
+                    Monochrome prev = b2->histogramSpecification(h);
 
                     QImage image = this->fromMonochrome(prev);
                     ImagePreview imagePreview(this);
@@ -1754,7 +1749,7 @@ void MainWindow::on_actionHistogram_Specification_triggered()
                         label->setPixmap(QPixmap::fromImage(newImage));
                     }
                 } else {
-                    errorMessage("Images have different resolution");
+                    errorMessage("Images have different level");
                 }
                 break;
             }
@@ -1762,8 +1757,10 @@ void MainWindow::on_actionHistogram_Specification_triggered()
                 Grayscale * g = grayscales.at(imageIdx);
                 Grayscale * g2 = grayscales.at(imageIdx2);
 
-                if (Image::sameResolution(g->getResolution(), g2->getResolution())) {
-                    Monochrome prev = g2->operation(g, o, g2->getLevel());
+                Histogram h = g->generateHistogram();
+
+                if (g->getLevel() == g2->getLevel()) {
+                    Monochrome prev = g2->histogramSpecification(h);
 
                     QImage image = this->fromMonochrome(prev);
                     ImagePreview imagePreview(this);
@@ -1775,15 +1772,19 @@ void MainWindow::on_actionHistogram_Specification_triggered()
                         label->setPixmap(QPixmap::fromImage(newImage));
                     }
                 } else {
-                    errorMessage("Images have different resolution");
+                    errorMessage("Images have different level");
                 }
                 break;
             } case (ImageType::TRUECOLOR) : {
                 Truecolor * tr = truecolors.at(imageIdx);
                 Truecolor * tr2 = truecolors.at(imageIdx2);
 
+                Histogram hr = tr->generateHistogram(PPMColorState::RED);
+                Histogram hg = tr->generateHistogram(PPMColorState::GREEN);
+                Histogram hb = tr->generateHistogram(PPMColorState::BLUE);
+
                 if (Image::sameResolution(tr->getResolution(), tr2->getResolution())) {
-                    Truecolor prev = tr2->operation(tr, o, tr->getLevel());
+                    Truecolor prev = tr2->histogramSpecification(hr, hg, hb);
 
                     QImage image = this->fromTruecolor(prev);
                     ImagePreview imagePreview(this);
