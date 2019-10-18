@@ -649,3 +649,64 @@ Truecolor Truecolor::histogramSpecification(Histogram hr, Histogram hg, Histogra
 
     return mNew;
 }
+
+Truecolor Truecolor::zoom(bool in) {
+    if (in) {
+        Resolution rNew;
+        rNew.height = this->resolution.height * 2;
+        rNew.width= this->resolution.width * 2;
+
+        Truecolor mNew(
+                    this->imageFormat,
+                    this->imageType,
+                    rNew,
+                    this->level
+                );
+
+        for (int i = 0; i < this->resolution.height; i++) {
+            for (int j = 0; j < this->resolution.width; j++) {
+                mNew.pixel[i * 2][j * 2] = this->pixel[i][j];
+                mNew.pixel[i * 2 + 1][j * 2] = this->pixel[i][j];
+                mNew.pixel[i * 2][j * 2 + 1] = this->pixel[i][j];
+                mNew.pixel[i * 2 + 1][j * 2 + 1] = this->pixel[i][j];
+            }
+        }
+
+        return mNew;
+    } else {
+        Resolution rNew;
+        rNew.height = this->resolution.height / 2;
+        rNew.width= this->resolution.width / 2;
+
+        Truecolor mNew(
+                    this->imageFormat,
+                    this->imageType,
+                    rNew,
+                    this->level
+                );
+
+        for (int i = 0; i < this->resolution.height - 1; i += 2) {
+            for (int j = 0; j < this->resolution.width - 1; j += 2) {
+                mNew.pixel[i / 2][j / 2].r = (short) ((
+                            this->pixel[i][j].r +
+                            this->pixel[i + 1][j].r +
+                            this->pixel[i][j + 1].r +
+                            this->pixel[i + 1][j + 1].r) / 4.0);
+
+                mNew.pixel[i / 2][j / 2].g = (short) ((
+                            this->pixel[i][j].g +
+                            this->pixel[i + 1][j].g +
+                            this->pixel[i][j + 1].g +
+                            this->pixel[i + 1][j + 1].g) / 4.0);
+
+                mNew.pixel[i / 2][j / 2].b = (short) ((
+                            this->pixel[i][j].b +
+                            this->pixel[i + 1][j].b +
+                            this->pixel[i][j + 1].b +
+                            this->pixel[i + 1][j + 1].b) / 4.0);
+            }
+        }
+
+        return mNew;
+    }
+}

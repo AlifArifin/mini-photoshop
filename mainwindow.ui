@@ -114,8 +114,27 @@
     <property name="title">
      <string>&amp;Histogram</string>
     </property>
+    <widget class="QMenu" name="menuRGB">
+     <property name="title">
+      <string>RGB Normal</string>
+     </property>
+     <addaction name="actionRed"/>
+     <addaction name="actionGreen"/>
+     <addaction name="actionBlue"/>
+    </widget>
+    <widget class="QMenu" name="menuRGB_Normalization">
+     <property name="title">
+      <string>RGB Normalization</string>
+     </property>
+     <addaction name="actionRed_2"/>
+     <addaction name="actionGreen_2"/>
+     <addaction name="actionBlue_2"/>
+    </widget>
     <addaction name="actionNormal"/>
     <addaction name="actionNormalisasi"/>
+    <addaction name="separator"/>
+    <addaction name="menuRGB"/>
+    <addaction name="menuRGB_Normalization"/>
    </widget>
    <widget class="QMenu" name="menuEnhancement">
     <property name="title">
@@ -269,7 +288,7 @@
   </action>
   <action name="actionNormalisasi">
    <property name="text">
-    <string>Normalisasi</string>
+    <string>Normalization</string>
    </property>
   </action>
   <action name="actionAbout_Image">
@@ -370,6 +389,36 @@
   <action name="actionOut">
    <property name="text">
     <string>Out</string>
+   </property>
+  </action>
+  <action name="actionRed">
+   <property name="text">
+    <string>Red</string>
+   </property>
+  </action>
+  <action name="actionGreen">
+   <property name="text">
+    <string>Green</string>
+   </property>
+  </action>
+  <action name="actionBlue">
+   <property name="text">
+    <string>Blue</string>
+   </property>
+  </action>
+  <action name="actionRed_2">
+   <property name="text">
+    <string>Red</string>
+   </property>
+  </action>
+  <action name="actionGreen_2">
+   <property name="text">
+    <string>Green</string>
+   </property>
+  </action>
+  <action name="actionBlue_2">
+   <property name="text">
+    <string>Blue</string>
    </property>
   </action>
  </widget>

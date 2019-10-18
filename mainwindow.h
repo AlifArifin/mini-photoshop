@@ -91,6 +91,10 @@ private slots:
 
     void on_actionOut_triggered();
 
+    void on_actionTranslation_triggered();
+
+    void on_actionRed_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;

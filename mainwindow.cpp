@@ -280,7 +280,7 @@ QImage MainWindow::fromGrayscale(Grayscale grayscale) {
     return image;
 }
 
-QImage fromTruecolor(Truecolor truecolor) {
+QImage MainWindow::fromTruecolor(Truecolor truecolor) {
     int height = truecolor.getResolution().height;
     int width = truecolor.getResolution().width;
 
@@ -1225,6 +1225,20 @@ void MainWindow::on_actionIn_triggered()
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
             break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->zoom(true);
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -1264,6 +1278,20 @@ void MainWindow::on_actionOut_triggered()
             if (result == QDialog::Accepted) {
                 grayscales.at(imageIdx) = new Grayscale(prev);
                 QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->zoom(false);
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
             break;

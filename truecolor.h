@@ -42,6 +42,7 @@ public:
     Truecolor sharpening(Truecolor * lowPass, float alpha = 1);
     Truecolor histogramLeveling();
     Truecolor histogramSpecification(Histogram hr,Histogram hg, Histogram hb);
+    Truecolor zoom(bool in);
 };
 
 #endif
