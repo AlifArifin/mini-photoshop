@@ -370,7 +370,7 @@ Truecolor Truecolor::geometry(Geometry geo) {
                     break;
                 }
                 case (Geometry::ROTATION_90) : {
-                    mNew.pixel[q][i] = this->pixel[i][j];
+                    mNew.pixel[q][p] = this->pixel[i][j];
                     break;
                 }
                 case (Geometry::ROTATION_180) : {
@@ -378,7 +378,7 @@ Truecolor Truecolor::geometry(Geometry geo) {
                     break;
                 }
                 case (Geometry::ROTATION_270) : {
-                    mNew.pixel[q][p] = this->pixel[i][j];
+                    mNew.pixel[q][i] = this->pixel[i][j];
                     break;
                 }
                 case (Geometry::FLIPPING_HORIZONTAL) : {
@@ -542,7 +542,7 @@ Truecolor Truecolor::convolution(Convolution c, Padding pad, int size, float** k
 
 Truecolor Truecolor::sharpening(Truecolor * lowPass, float alpha) {
     Truecolor highPass = this->operation(lowPass, Operation::SUBTRACT, this->level);
-    Truecolor sharp = (this->brightening(alpha, Operation::MULTIPLY)).operation(&highPass, Operation::ADD, this->level);
+    Truecolor sharp = (this->brightening(alpha - 1, Operation::MULTIPLY)).operation(&highPass, Operation::ADD, this->level);
 
     return sharp;
 }

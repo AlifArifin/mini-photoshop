@@ -14,6 +14,8 @@ class FormTranslation : public QDialog
 public:
     explicit FormTranslation(QWidget *parent = nullptr);
     ~FormTranslation();
+    int getX();
+    int getY();
 
 private:
     Ui::FormTranslation *ui;

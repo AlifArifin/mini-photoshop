@@ -277,7 +277,7 @@ Monochrome Monochrome::geometry(Geometry geo) {
                     break;
                 }
                 case (Geometry::ROTATION_90) : {
-                    mNew.pixel[q][i] = this->pixel[i][j];
+                    mNew.pixel[q][p] = this->pixel[i][j];
                     break;
                 }
                 case (Geometry::ROTATION_180) : {
@@ -285,7 +285,7 @@ Monochrome Monochrome::geometry(Geometry geo) {
                     break;
                 }
                 case (Geometry::ROTATION_270) : {
-                    mNew.pixel[q][p] = this->pixel[i][j];
+                    mNew.pixel[q][i] = this->pixel[i][j];
                     break;
                 }
                 case (Geometry::FLIPPING_HORIZONTAL) : {

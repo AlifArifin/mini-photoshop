@@ -95,6 +95,24 @@ private slots:
 
     void on_actionRed_triggered();
 
+    void on_actionGreen_triggered();
+
+    void on_actionBlue_triggered();
+
+    void on_actionRed_2_triggered();
+
+    void on_actionGreen_2_triggered();
+
+    void on_actionBlue_2_triggered();
+
+    void on_actionHighboost_Filter_triggered();
+
+    void on_action90_triggered();
+
+    void on_action180_triggered();
+
+    void on_action270_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;
@@ -114,6 +132,7 @@ private:
     void transformation(Transformation t, float c, float gamma);
     void errorMessage(QString s);
     void convolution(Convolution c, Padding pad, int size, float ** kernel);
+    void rotation(Geometry t);
     float inputFloat(QString title, QString question);
     int inputInt(QString title, QString question);
     QString inputComboBox(QString title, QString question, QStringList list);

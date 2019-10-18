@@ -22,6 +22,7 @@
 #include "padding.h"
 #include "rgba.h"
 #include "ppm_state.h"
+#include "formtranslation.h"
 #include <QFileDialog>
 #include <QTabBar>
 #include <QTabWidget>
@@ -438,6 +439,7 @@ void MainWindow::operations(int idx, Operation o) {
                 Binary * b2 = binaries.at(imageIdx2);
 
                 if (Image::sameResolution(b->getResolution(), b2->getResolution())) {
+                    qInfo("operations");
                     Monochrome prev = b2->operation(b, o, 1);
 
                     QImage image = this->fromMonochrome(prev);
@@ -459,7 +461,7 @@ void MainWindow::operations(int idx, Operation o) {
                 Grayscale * g2 = grayscales.at(imageIdx2);
 
                 if (Image::sameResolution(g->getResolution(), g2->getResolution())) {
-                    Monochrome prev = g2->operation(g, o, 1);
+                    Monochrome prev = g2->operation(g, o, g2->getLevel());
 
                     QImage image = this->fromMonochrome(prev);
                     ImagePreview imagePreview(this);
@@ -479,7 +481,7 @@ void MainWindow::operations(int idx, Operation o) {
                 Truecolor * tr2 = truecolors.at(imageIdx2);
 
                 if (Image::sameResolution(tr->getResolution(), tr2->getResolution())) {
-                    Truecolor prev = tr2->operation(tr, o, 1);
+                    Truecolor prev = tr2->operation(tr, o, tr->getLevel());
 
                     QImage image = this->fromTruecolor(prev);
                     ImagePreview imagePreview(this);
@@ -1088,7 +1090,7 @@ void MainWindow::convolution(Convolution c, Padding pad, int size, float **kerne
                 QImage newImage = fromMonochrome(prev);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
-        break;
+            break;
         }
         case (ImageType::GRAYSCALE) : {
             Grayscale * g = grayscales.at(imageIdx);
@@ -1103,7 +1105,22 @@ void MainWindow::convolution(Convolution c, Padding pad, int size, float **kerne
                 QImage newImage = fromMonochrome(prev);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
-        break;
+            break;
+        }
+        case (ImageType::TRUECOLOR): {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->convolution(c, pad, size, kernel);
+
+            QImage image = this->fromTruecolor(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -1201,7 +1218,63 @@ void MainWindow::on_actionUnsharp_Masking_triggered()
     kernel[1][0] = 1.0/10; kernel[1][1] = 1.0/5; kernel[1][2] = 1.0/10;
     kernel[2][0] = 1.0/10; kernel[2][1] = 1.0/10; kernel[2][2] = 1.0/10;
 
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
 
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            Monochrome low = b->convolution(Convolution::BASIC, Padding::SAME, 3, kernel);
+            Monochrome prev = b->sharpening(&low, 2);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                binaries.at(imageIdx) = new Binary(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+           break;
+        }
+        case (ImageType::GRAYSCALE) : {
+            Grayscale * g = grayscales.at(imageIdx);
+            Monochrome low = g->convolution(Convolution::BASIC, Padding::SAME, 3, kernel);
+            Monochrome prev = g->sharpening(&low, 2);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                grayscales.at(imageIdx) = new Grayscale(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+           break;
+        }
+        case (ImageType::TRUECOLOR): {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor low = tr->convolution(Convolution::BASIC, Padding::SAME, 3, kernel);
+            Truecolor prev = tr->sharpening(&low, 2);
+
+            QImage image = this->fromTruecolor(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        }
+    }
 }
 
 void MainWindow::on_actionIn_triggered()
@@ -1318,7 +1391,73 @@ void MainWindow::on_actionOut_triggered()
 
 void MainWindow::on_actionTranslation_triggered()
 {
+    FormTranslation form(this);
+    form.setWindowTitle("Translation");
+    int result = form.exec();
 
+    if (result == QDialog::Accepted) {
+        QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+        int idx = tabWidget->currentIndex();
+        TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+        QLabel * label = tabPage->findChild<QLabel*>("label");
+        int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+        switch (tabPage->getImageType()) {
+            case (ImageType::BINARY) : {
+                Binary * b = binaries.at(imageIdx);
+                Monochrome prev = b->translastion(
+                            form.getX(),
+                            form.getY()
+                        );
+
+                QImage image = this->fromMonochrome(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    binaries.at(imageIdx) = new Binary(prev);
+                    QImage newImage = fromMonochrome(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+
+                break;
+            } case (ImageType::GRAYSCALE) : {
+                Grayscale * g = grayscales.at(imageIdx);
+                Monochrome prev = g->translastion(
+                            form.getX(),
+                            form.getY()
+                        );
+
+                QImage image = this->fromMonochrome(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    grayscales.at(imageIdx) = new Grayscale(prev);
+                    QImage newImage = fromMonochrome(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            } case (ImageType::TRUECOLOR) : {
+                Truecolor * tr = truecolors.at(imageIdx);
+                Truecolor prev = tr->translastion(
+                            form.getX(),
+                            form.getY()
+                        );
+
+                QImage image = this->fromTruecolor(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    truecolors.at(imageIdx) = new Truecolor(prev);
+                    QImage newImage = fromTruecolor(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            }
+        }
+    }
 }
 
 void MainWindow::on_actionRed_triggered()
@@ -1336,5 +1475,332 @@ void MainWindow::on_actionRed_triggered()
             histogram(h, false);
             break;
         }
+    }
+}
+
+void MainWindow::on_actionGreen_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Histogram h = tr->generateHistogram(PPMColorState::GREEN);
+            histogram(h, false);
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionBlue_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Histogram h = tr->generateHistogram(PPMColorState::BLUE);
+            histogram(h, false);
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionRed_2_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Histogram h = tr->generateHistogram(PPMColorState::RED);
+            histogram(h, true);
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionGreen_2_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Histogram h = tr->generateHistogram(PPMColorState::GREEN);
+            histogram(h, true);
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionBlue_2_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Histogram h = tr->generateHistogram(PPMColorState::BLUE);
+            histogram(h, true);
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionHighboost_Filter_triggered()
+{
+    try {
+        float alpha = inputFloat("Highboost filter", "Insert alpha");
+        float **kernel = new float*[3];
+        for (int i =0; i < 3; i++) {
+            kernel[i] = new float[3];
+        }
+        kernel[0][0] = 1.0/10; kernel[0][1] = 1.0/10; kernel[0][2] = 1.0/10;
+        kernel[1][0] = 1.0/10; kernel[1][1] = 1.0/5; kernel[1][2] = 1.0/10;
+        kernel[2][0] = 1.0/10; kernel[2][1] = 1.0/10; kernel[2][2] = 1.0/10;
+
+        QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+        int idx = tabWidget->currentIndex();
+        TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+        QLabel * label = tabPage->findChild<QLabel*>("label");
+
+        int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+        switch (tabPage->getImageType()) {
+            case (ImageType::BINARY) : {
+                Binary * b = binaries.at(imageIdx);
+                Monochrome low = b->convolution(Convolution::BASIC, Padding::SAME, 3, kernel);
+                Monochrome prev = b->sharpening(&low, alpha);
+
+                QImage image = this->fromMonochrome(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    binaries.at(imageIdx) = new Binary(prev);
+                    QImage newImage = fromMonochrome(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+               break;
+            }
+            case (ImageType::GRAYSCALE) : {
+                Grayscale * g = grayscales.at(imageIdx);
+                Monochrome low = g->convolution(Convolution::BASIC, Padding::SAME, 3, kernel);
+                Monochrome prev = g->sharpening(&low, alpha);
+
+                QImage image = this->fromMonochrome(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    grayscales.at(imageIdx) = new Grayscale(prev);
+                    QImage newImage = fromMonochrome(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+               break;
+            }
+            case (ImageType::TRUECOLOR): {
+                Truecolor * tr = truecolors.at(imageIdx);
+                Truecolor low = tr->convolution(Convolution::BASIC, Padding::SAME, 3, kernel);
+                Truecolor prev = tr->sharpening(&low, alpha);
+
+                QImage image = this->fromTruecolor(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    truecolors.at(imageIdx) = new Truecolor(prev);
+                    QImage newImage = fromTruecolor(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            }
+        }
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::rotation(Geometry t) {
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            Monochrome prev = b->geometry(t);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                binaries.at(imageIdx) = new Binary(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+        break;
+        }
+        case (ImageType::GRAYSCALE) : {
+            Grayscale * g = grayscales.at(imageIdx);
+            Monochrome prev = g->geometry(t);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                grayscales.at(imageIdx) = new Grayscale(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+           break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->geometry(t);
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        }
+    }
+}
+
+void MainWindow::on_action90_triggered()
+{
+    rotation(Geometry::ROTATION_90);
+}
+
+void MainWindow::on_action180_triggered()
+{
+    rotation(Geometry::ROTATION_180);
+}
+
+void MainWindow::on_action270_triggered()
+{
+    rotation(Geometry::ROTATION_270);
+}
+
+void MainWindow::on_actionHistogram_Specification_triggered()
+{
+    int idx = inputInt("Operation Add", "Insert index");
+
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    int idx2 = tabWidget->currentIndex();
+    TabPage * tabPage2 = (TabPage *) tabWidget->widget(idx2);
+    QLabel * label2 = tabPage2->findChild<QLabel*>("label");
+    int imageIdx2 = this->getVectorIdx(idx2, tabPage2->getImageType());
+
+    if (tabPage->getImageType() == tabPage2->getImageType()) {
+        switch (tabPage->getImageType()) {
+            case (ImageType::BINARY) : {
+                Binary * b = binaries.at(imageIdx);
+                Binary * b2 = binaries.at(imageIdx2);
+
+                Monochrome m1 = b->histogramLeveling();
+                Monochrome m2 = b2->histogramLeveling();
+
+                Histogram h1 = m1.generateHistogram();
+                Histogram h2 = m2.generateHistogram();
+
+                if (h1.size == h2.size) {
+                    qInfo("operations");
+                    Monochrome prev = b2->
+
+                    QImage image = this->fromMonochrome(prev);
+                    ImagePreview imagePreview(this);
+                    imagePreview.setImage(image);
+                    int result = imagePreview.exec();
+                    if (result == QDialog::Accepted) {
+                        binaries.at(imageIdx) = new Binary(prev);
+                        QImage newImage = fromMonochrome(prev);
+                        label->setPixmap(QPixmap::fromImage(newImage));
+                    }
+                } else {
+                    errorMessage("Images have different resolution");
+                }
+                break;
+            }
+            case (ImageType::GRAYSCALE) : {
+                Grayscale * g = grayscales.at(imageIdx);
+                Grayscale * g2 = grayscales.at(imageIdx2);
+
+                if (Image::sameResolution(g->getResolution(), g2->getResolution())) {
+                    Monochrome prev = g2->operation(g, o, g2->getLevel());
+
+                    QImage image = this->fromMonochrome(prev);
+                    ImagePreview imagePreview(this);
+                    imagePreview.setImage(image);
+                    int result = imagePreview.exec();
+                    if (result == QDialog::Accepted) {
+                        grayscales.at(imageIdx) = new Grayscale(prev);
+                        QImage newImage = fromMonochrome(prev);
+                        label->setPixmap(QPixmap::fromImage(newImage));
+                    }
+                } else {
+                    errorMessage("Images have different resolution");
+                }
+                break;
+            } case (ImageType::TRUECOLOR) : {
+                Truecolor * tr = truecolors.at(imageIdx);
+                Truecolor * tr2 = truecolors.at(imageIdx2);
+
+                if (Image::sameResolution(tr->getResolution(), tr2->getResolution())) {
+                    Truecolor prev = tr2->operation(tr, o, tr->getLevel());
+
+                    QImage image = this->fromTruecolor(prev);
+                    ImagePreview imagePreview(this);
+                    imagePreview.setImage(image);
+                    int result = imagePreview.exec();
+                    if (result == QDialog::Accepted) {
+                        truecolors.at(imageIdx) = new Truecolor(prev);
+                        QImage newImage = fromTruecolor(prev);
+                        label->setPixmap(QPixmap::fromImage(newImage));
+                    }
+                } else {
+                    errorMessage("Images have different resolution");
+                }
+                break;
+            }
+        }
+    } else {
+        errorMessage("Images has different type");
     }
 }

@@ -86,8 +86,16 @@
       <addaction name="actionIn"/>
       <addaction name="actionOut"/>
      </widget>
+     <widget class="QMenu" name="menuRotation">
+      <property name="title">
+       <string>Rotation</string>
+      </property>
+      <addaction name="action90"/>
+      <addaction name="action180"/>
+      <addaction name="action270"/>
+     </widget>
      <addaction name="actionTranslation"/>
-     <addaction name="actionRotation"/>
+     <addaction name="menuRotation"/>
      <addaction name="menuFlip"/>
      <addaction name="menuMirror"/>
      <addaction name="menuZoom"/>
@@ -234,11 +242,6 @@
   <action name="actionTranslation">
    <property name="text">
     <string>Translation</string>
-   </property>
-  </action>
-  <action name="actionRotation">
-   <property name="text">
-    <string>Rotation</string>
    </property>
   </action>
   <action name="actionAdd_2">
@@ -419,6 +422,21 @@
   <action name="actionBlue_2">
    <property name="text">
     <string>Blue</string>
+   </property>
+  </action>
+  <action name="action90">
+   <property name="text">
+    <string>90</string>
+   </property>
+  </action>
+  <action name="action180">
+   <property name="text">
+    <string>180</string>
+   </property>
+  </action>
+  <action name="action270">
+   <property name="text">
+    <string>270</string>
    </property>
   </action>
  </widget>
