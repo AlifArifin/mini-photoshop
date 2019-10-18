@@ -50,6 +50,7 @@ public:
     Monochrome histogramLeveling();
     Monochrome histogramSpecification(Histogram h);
     Monochrome edgeDetection(EdgeDetection e, int c = 1);
+    Monochrome zoom(bool in);
 };
 
 #endif

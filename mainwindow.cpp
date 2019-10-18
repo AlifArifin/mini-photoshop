@@ -1123,3 +1123,44 @@ void MainWindow::on_actionUnsharp_Masking_triggered()
 
 
 }
+
+void MainWindow::on_actionIn_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            Monochrome prev = b->zoom(true);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                binaries.at(imageIdx) = new Binary(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        }
+        case (ImageType::GRAYSCALE) : {
+            Grayscale * g = grayscales.at(imageIdx);
+            Monochrome prev = g->zoom(true);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                grayscales.at(imageIdx) = new Grayscale(prev);
+                QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+    }
+}

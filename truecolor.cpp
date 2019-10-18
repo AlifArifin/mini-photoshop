@@ -115,7 +115,7 @@ Truecolor::Truecolor(ImageFormat imageFormat, ImageType ImageType, Resolution re
     }
 }
 
-Truecolor::Truecolor(const Truecolor & truecolor) {
+Truecolor::Truecolor(const Truecolor & truecolor) : Image(truecolor) {
     this->level = truecolor.level;
     this->pixel = new RGBA*[this->resolution.height];
     for (int i = 0; i < this->resolution.height; i++) {

@@ -595,3 +595,52 @@ Monochrome Monochrome::edgeDetection(EdgeDetection e, int c) {
 
     return mNew;
 }
+
+Monochrome Monochrome::zoom(bool in) {
+    if (in) {
+        Resolution rNew;
+        rNew.height = this->resolution.height * 2;
+        rNew.width= this->resolution.width * 2;
+
+        Monochrome mNew(
+                    this->imageFormat,
+                    this->imageType,
+                    rNew,
+                    this->level
+                );
+
+        for (int i = 0; i < this->resolution.height; i++) {
+            for (int j = 0; j < this->resolution.width; j++) {
+                mNew.pixel[i * 2][j * 2] = this->pixel[i][j];
+                mNew.pixel[i * 2 + 1][j * 2] = this->pixel[i][j];
+                mNew.pixel[i * 2][j * 2 + 1] = this->pixel[i][j];
+                mNew.pixel[i * 2 + 1][j * 2 + 1] = this->pixel[i][j];
+            }
+        }
+
+        return mNew;
+    } else {
+        Resolution rNew;
+        rNew.height = this->resolution.height / 2;
+        rNew.width= this->resolution.width / 2;
+
+        Monochrome mNew(
+                    this->imageFormat,
+                    this->imageType,
+                    rNew,
+                    this->level
+                );
+
+        for (int i = 0; i < this->resolution.height - 1; i += 2) {
+            for (int j = 0; j < this->resolution.width - 1; j += 2) {
+                mNew.pixel[i / 2][j / 2] = (short) ((
+                            this->pixel[i][j] +
+                            this->pixel[i + 1][j] +
+                            this->pixel[i][j + 1] +
+                            this->pixel[i + 1][j + 1]) / 4.0);
+            }
+        }
+
+        return mNew;
+    }
+}
