@@ -1,6 +1,5 @@
 #include "image.h"
 #include "image_type.h"
-#include "bmp_header.h"
 
 #include <stdio.h>
 #include <iostream>
@@ -65,6 +64,7 @@ ImageType Image::checkFile(string filename) {
 
     switch (imageFormat) {
         case ImageFormat::BMP :
+            return ImageType::TRUECOLOR;
         case ImageFormat::PBM :
             return ImageType::BINARY;
         case ImageFormat::PGM :

@@ -40,7 +40,7 @@ FORMS += \
 HEADERS += \
     binary.h \
     bitplane.h \
-    bmp_header.h \
+    bmp.h \
     convolution.h \
     dialoghistogram.h \
     edge_detection.h \

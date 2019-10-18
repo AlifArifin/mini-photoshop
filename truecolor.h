@@ -17,6 +17,7 @@ private:
     int level;
 
 public:
+    Truecolor(string filename, ImageFormat imageFormat, ImageType ImageType);
     Truecolor(ifstream * file, ImageFormat imageFormat, ImageType ImageType);
     Truecolor(ImageFormat imageFormat, ImageType ImageType, Resolution resolution, int level);
     Truecolor(ImageFormat imageFormat, Resolution resolution, int level);

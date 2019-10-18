@@ -6,11 +6,32 @@
 #include "operation.h"
 #include "transformation.h"
 #include "geometry.h"
+#include "bmp.h"
 #include <vector>
 #include <stdio.h>
 #include <QDebug>
 
 using namespace std;
+
+Truecolor::Truecolor(string filename, ImageFormat imageFormat, ImageType ImageType) : Image(imageFormat, imageType) {
+    struct BMP bmp(filename.c_str());
+
+    this->resolution.width = bmp.bmp_info_header.width;
+    this->resolution.height = bmp.bmp_info_header.height;
+    this->level = 255;
+
+    int counter = 0;
+    PPMColorState state = PPMColorState::RED;
+    this->pixel = new RGBA*[this->resolution.height];
+    for (int i = 0; i < this->resolution.height; i++) {
+        this->pixel[i] = new RGBA[this->resolution.width];
+        for (int j = 0; j < this->resolution.width; j++) {
+            this->pixel[i][j].r = (short) bmp.data.at(counter++);
+            this->pixel[i][j].g = (short) bmp.data.at(counter++);
+            this->pixel[i][j].b = (short) bmp.data.at(counter++);
+        }
+    }
+}
 
 Truecolor::Truecolor(ifstream * file, ImageFormat imageFormat, ImageType imageType) {
     qInfo("create truecolor");

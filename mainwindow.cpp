@@ -141,19 +141,24 @@ void MainWindow::on_actionOpen_triggered()
         grayscales.push_back(new Grayscale(grayscale));
         tabPage->setImageType(ImageType::GRAYSCALE);
     } else if (imageType == ImageType::TRUECOLOR) {
-        Truecolor truecolor(&file, imageFormat, imageType);
+        Truecolor * truecolor;
+        if (imageFormat == ImageFormat::BMP) {
+            truecolor = new Truecolor(sFileName, imageFormat, imageType);
+        } else {
+            truecolor = new Truecolor(&file, imageFormat, imageType);
+        }
         qInfo("after ctor");
-        height = truecolor.getResolution().height;
-        width = truecolor.getResolution().width;
+        height = truecolor->getResolution().height;
+        width = truecolor->getResolution().width;
 
         QImage image(width, height, QImage::Format_RGB32);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                RGBA value = truecolor.getIndividualPixel(i, j);
-                if (truecolor.getLevel() != 255) {
-                    value.r = (int) ((float) value.r / truecolor.getLevel() * 255);
-                    value.g = (int) ((float) value.g / truecolor.getLevel() * 255);
-                    value.b = (int) ((float) value.b / truecolor.getLevel() * 255);
+                RGBA value = truecolor->getIndividualPixel(i, j);
+                if (truecolor->getLevel() != 255) {
+                    value.r = (int) ((float) value.r / truecolor->getLevel() * 255);
+                    value.g = (int) ((float) value.g / truecolor->getLevel() * 255);
+                    value.b = (int) ((float) value.b / truecolor->getLevel() * 255);
                 }
 
                 image.setPixel(j, i, qRgb(value.r, value.g, value.b));
@@ -162,7 +167,7 @@ void MainWindow::on_actionOpen_triggered()
         qInfo("after ctor");
         label->setPixmap(QPixmap::fromImage(image));
         qInfo("after ctor");
-        truecolors.push_back(new Truecolor(truecolor));
+        truecolors.push_back(new Truecolor(*truecolor));
         qInfo("after ctor");
         tabPage->setImageType(ImageType::TRUECOLOR);
         qInfo("after ctor");
@@ -1804,4 +1809,81 @@ void MainWindow::on_actionHistogram_Specification_triggered()
     } else {
         errorMessage("Images has different type");
     }
+}
+
+void MainWindow::on_actionAbout_Image_triggered()
+{
+    QMainWindow * window = new QMainWindow(this);
+
+    QFormLayout *formLayout = new QFormLayout;
+
+    QLabel *width = new QLabel(window);
+    width->setText("Width");
+    QLabel *width_value = new QLabel(window);
+    QLabel *height = new QLabel(window);
+    height->setText("Height");
+    QLabel *height_value = new QLabel(window);
+    QLabel *level = new QLabel(window);
+    level->setText("Level");
+    QLabel *level_value = new QLabel(window);
+    QLabel *type = new QLabel(window);
+    type->setText("Image Type");
+    QLabel *type_value = new QLabel(window);
+    QLabel *format= new QLabel(window);
+    format->setText("Format Type");
+    QLabel *format_value = new QLabel(window);
+
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+
+            width_value->setNum((int) b->getResolution().width);
+            height_value->setNum((int) b->getResolution().height);
+            level_value->setNum(b->getLevel());
+            type_value->setText("Binary");
+            format_value->setText(image_format::toString(b->getImageFormat()).c_str());
+            break;
+        }
+        case (ImageType::GRAYSCALE) : {
+            Grayscale * b = grayscales.at(imageIdx);
+
+            width_value->setNum((int) b->getResolution().width);
+            height_value->setNum((int) b->getResolution().height);
+            level_value->setNum(b->getLevel());
+            type_value->setText("Grayscale");
+            format_value->setText(image_format::toString(b->getImageFormat()).c_str());
+            break;
+        }
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * b = truecolors.at(imageIdx);
+
+            width_value->setNum((int) b->getResolution().width);
+            height_value->setNum((int) b->getResolution().height);
+            level_value->setNum(b->getLevel());
+            type_value->setText("Truecolor");
+            format_value->setText(image_format::toString(b->getImageFormat()).c_str());
+            break;
+        }
+    }
+
+    formLayout->addRow(type, type_value);
+    formLayout->addRow(format, format_value);
+    formLayout->addRow(width, width_value);
+    formLayout->addRow(height, height_value);
+    formLayout->addRow(level, level_value);
+
+    window->setWindowModality(Qt::WindowModal);
+    window->setCentralWidget(new QWidget);
+    window->centralWidget()->setLayout(formLayout);
+
+    window->resize(200, 200);
+    window->setParent(this);
+    window->show();
 }

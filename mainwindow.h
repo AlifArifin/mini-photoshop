@@ -115,6 +115,8 @@ private slots:
 
     void on_actionHistogram_Specification_triggered();
 
+    void on_actionAbout_Image_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;

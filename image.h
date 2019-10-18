@@ -6,7 +6,6 @@
 #include "image_format.h"
 #include "image_type.h"
 #include "resolution.h"
-#include "bmp_header.h"
 #include "mapping.h"
 #include "histogram.h"
 
@@ -36,7 +35,6 @@ public:
     // image checker
     static ImageType checkFile(string filename);
     static ImageFormat checkFormat(string filename);
-    static BMPHeader readBMPHeader(string filename);
     static bool isComment(string line);
     static short clipping(short pixel, short top, short bot = 0);
     static bool sameResolution(Resolution r1, Resolution r2);
