@@ -9,6 +9,7 @@ struct Histogram {
     float mean;
     double var;
     double std;
+    int total;
 };
 
 #endif

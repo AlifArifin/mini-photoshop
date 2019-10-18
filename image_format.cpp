@@ -13,6 +13,8 @@ ImageFormat convertFromString(string fileFormat) {
         return ImageFormat::PBM;
     } else if (fileFormat == "bmp") {
         return ImageFormat::BMP;
+    } else if (fileFormat == "raw_image") {
+        return ImageFormat::RAW_IMAGE;
     } else {
         throw "File extension not supported";
     }

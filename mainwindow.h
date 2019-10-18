@@ -65,8 +65,6 @@ private slots:
 
     void on_actionGray_Level_Slicing_triggered();
 
-    void on_actionBit_Slicing_triggered();
-
     void on_actionNormalisasi_triggered();
 
     void on_actionHistogram_Leveling_triggered();
@@ -117,6 +115,22 @@ private slots:
 
     void on_actionAbout_Image_triggered();
 
+    void on_actionAnd_triggered();
+
+    void on_actionOr_triggered();
+
+    void on_actionGrayscale_triggered();
+
+    void on_actionGrayscale_2_triggered();
+
+    void on_actionRed_3_triggered();
+
+    void on_actionGreen_3_triggered();
+
+    void on_actionBlue_3_triggered();
+
+    void on_actionSave_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;
@@ -140,6 +154,8 @@ private:
     float inputFloat(QString title, QString question);
     int inputInt(QString title, QString question);
     QString inputComboBox(QString title, QString question, QStringList list);
+    string inputString(QString title, QString question);
+    void bitPlane(PPMColorState color = PPMColorState::RED);
 };
 
 #endif // MAINWINDOW_H

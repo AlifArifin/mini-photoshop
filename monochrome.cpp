@@ -78,6 +78,33 @@ void Monochrome::setLevel(short level) {
 
 void Monochrome::save(string filename) {
 
+    ofstream myfile;
+    myfile.open ("D://ImageSample/Saved/" + filename);
+
+    if (this->imageType == ImageType::BINARY) {
+        myfile << "P1" << "\n";
+        myfile << this->resolution.width << " " << this->resolution.height << "\n";
+    } else {
+        myfile << "P2" << "\n";
+        myfile << this->resolution.width << " " << this->resolution.height << "\n";
+        myfile << this->level << "\n";
+    }
+
+    int counter = 0;
+    for (int i = 0; i < resolution.height; i++) {
+        for (int j = 0; j < resolution.width; j++) {
+            myfile << this->pixel[i][j] << " ";
+            counter++;
+
+            if (counter >= 17) {
+                myfile << "\n";
+                counter = 0;
+            }
+        }
+    }
+
+    myfile.close();
+    qInfo("saved");
 }
 
 template <class T>
@@ -321,6 +348,7 @@ Histogram Monochrome::generateHistogram() {
     histogram.norm = new float[histogram.size];
 
     long totalPixel = this->resolution.height * this->resolution.width;
+    histogram.total = totalPixel;
 
     for (int i = 0; i < histogram.size; i++) {
         histogram.value[i] = 0;
@@ -348,8 +376,8 @@ Histogram Monochrome::generateHistogram() {
         var += pow(i - histogram.mean, 2) * histogram.value[i];
     }
 
-    histogram.var = var;
-    histogram.std = pow(var, 0.5);
+    histogram.var = (float) var/totalPixel;
+    histogram.std = pow(histogram.var, 0.5);
 
     return histogram;
 }

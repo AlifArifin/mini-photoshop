@@ -7,6 +7,7 @@
 #include "transformation.h"
 #include "geometry.h"
 #include "bmp.h"
+#include "grayscale.h"
 #include <vector>
 #include <stdio.h>
 #include <QDebug>
@@ -191,7 +192,33 @@ void Truecolor::setLevel(int level) {
 }
 
 void Truecolor::save(string filename) {
+    ofstream myfile;
+    myfile.open ("D://ImageSample/Saved/" + filename);
 
+
+    myfile << "P3" << "\n";
+    myfile << this->resolution.width << " " << this->resolution.height << "\n";
+    myfile << this->level << "\n";
+
+
+    int counter = 0;
+    for (int i = 0; i < resolution.height; i++) {
+        for (int j = 0; j < resolution.width; j++) {
+            myfile << this->pixel[i][j].r << " ";
+            myfile << this->pixel[i][j].g << " ";
+            myfile << this->pixel[i][j].b << " ";
+
+            counter++;
+
+            if (counter >= 5) {
+                myfile << "\n";
+                counter = 0;
+            }
+        }
+    }
+
+    myfile.close();
+    qInfo("saved");
 }
 
 Truecolor Truecolor::negative() {
@@ -435,6 +462,7 @@ Histogram Truecolor::generateHistogram(PPMColorState color) {
     histogram.norm = new float[histogram.size];
 
     long totalPixel = this->resolution.height * this->resolution.width;
+    histogram.total = totalPixel;
 
     for (int i = 0; i < histogram.size; i++) {
         histogram.value[i] = 0;
@@ -468,8 +496,8 @@ Histogram Truecolor::generateHistogram(PPMColorState color) {
         var += pow(i - histogram.mean, 2) * histogram.value[i];
     }
 
-    histogram.var = var;
-    histogram.std = pow(var, 0.5);
+    histogram.var = (float) var/totalPixel;
+    histogram.std = pow(histogram.var, 0.5);
 
     return histogram;
 }
@@ -789,4 +817,197 @@ Truecolor Truecolor::contrastStretching(int a, int b, int ya, int yb, float alph
     }
 
     return gNew;
+}
+
+Grayscale Truecolor::toGrayscale() {
+    Grayscale g(
+        ImageFormat::NONE,
+        this->resolution, 
+        this->level
+    );
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            short pxl = this->pixel[i][j].r * 0.299 +
+                         this->pixel[i][j].g * 0.587 +
+                         this->pixel[i][j].b * 0.144;
+            g.setIndividualPixel(i, j, Image::clipping(pxl, this->level));
+        }
+    }
+
+    return g;
+}
+
+Truecolor Truecolor::slicing(int a, int b, int max) {
+    Truecolor tNew(
+        this->imageFormat,
+        this->resolution,
+        this->level
+    );
+
+    if (max > level) {
+        max = level;
+    }
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            short temp;
+
+            if (this->pixel[i][j].r >= a && this->pixel[i][j].r <= b) {
+                tNew.pixel[i][j].r = max;
+            } else {
+                tNew.pixel[i][j].r = this->pixel[i][j].r;
+            }
+
+            if (this->pixel[i][j].g >= a && this->pixel[i][j].g <= b) {
+                tNew.pixel[i][j].g = max;
+            } else {
+                tNew.pixel[i][j].g = this->pixel[i][j].g;
+            }
+
+            if (this->pixel[i][j].b >= a && this->pixel[i][j].b <= b) {
+                tNew.pixel[i][j].b = max;
+            } else {
+                tNew.pixel[i][j].b = this->pixel[i][j].b;
+            }
+        }
+    }
+
+    return tNew;
+}
+
+Truecolor Truecolor::transformation(Transformation t, float c, float gamma) {
+    Truecolor gNew(
+        this->imageFormat,
+        this->resolution,
+        this->level
+    );
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            RGBA temp;
+
+            switch (t) {
+                case (Transformation::LOG) : {
+                    temp.r = (int) c * log(1 + this->pixel[i][j].r);
+                    temp.g = (int) c * log(1 + this->pixel[i][j].g);
+                    temp.b = (int) c * log(1 + this->pixel[i][j].g);
+                    break;
+                }
+                case (Transformation::INVERSE_LOG) : {
+                    temp.r = (int) pow(exp(1 + this->pixel[i][j].r), (float) 1 / c) - 1;
+                    temp.g = (int) pow(exp(1 + this->pixel[i][j].g), (float) 1 / c) - 1;
+                    temp.b = (int) pow(exp(1 + this->pixel[i][j].b), (float) 1 / c) - 1;
+                    break;
+                }
+                case (Transformation::POWER) : {
+                    temp.r = (int) c * pow(this->pixel[i][j].r, gamma);
+                    temp.g = (int) c * pow(this->pixel[i][j].g, gamma);
+                    temp.b = (int) c * pow(this->pixel[i][j].b, gamma);
+                    break;
+                }
+            }
+
+            gNew.pixel[i][j].r = Image::clipping(temp.r, this->level);
+            gNew.pixel[i][j].g = Image::clipping(temp.g, this->level);
+            gNew.pixel[i][j].g = Image::clipping(temp.b, this->level);
+        }
+    }
+    return gNew;
+}
+
+vector<Binary*> Truecolor::bitSlicing(PPMColorState color) {
+    // asumsi 1 pixel = 8 bit
+    vector<Binary*> vec;
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+    vec.push_back(new Binary(ImageFormat::NONE, this->resolution));
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            if (color == PPMColorState::RED) {
+                if (this->pixel[i][j].r & 1) {
+                    vec[0]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 2) {
+                    vec[1]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 4) {
+                    vec[2]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 8) {
+                    vec[3]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 16) {
+                    vec[4]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 32) {
+                    vec[5]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 64) {
+                    vec[6]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].r & 128) {
+                    vec[7]->setIndividualPixel(i, j, 1);
+                }
+            } else if (color == PPMColorState::GREEN) {
+                if (this->pixel[i][j].g & 1) {
+                    vec[0]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 2) {
+                    vec[1]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 4) {
+                    vec[2]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 8) {
+                    vec[3]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 16) {
+                    vec[4]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 32) {
+                    vec[5]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 64) {
+                    vec[6]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].g & 128) {
+                    vec[7]->setIndividualPixel(i, j, 1);
+                }
+            } else if (color == PPMColorState::BLUE) {
+                if (this->pixel[i][j].b & 1) {
+                    vec[0]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 2) {
+                    vec[1]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 4) {
+                    vec[2]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 8) {
+                    vec[3]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 16) {
+                    vec[4]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 32) {
+                    vec[5]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 64) {
+                    vec[6]->setIndividualPixel(i, j, 1);
+                }
+                if (this->pixel[i][j].b & 128) {
+                    vec[7]->setIndividualPixel(i, j, 1);
+                }
+            }
+        }
+    }
+
+    return vec;
 }

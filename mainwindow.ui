@@ -39,6 +39,7 @@
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionAbout_Image"/>
+    <addaction name="actionSave"/>
    </widget>
    <widget class="QMenu" name="menuOperations">
     <property name="title">
@@ -167,10 +168,19 @@
      <addaction name="action5"/>
      <addaction name="action6"/>
     </widget>
+    <widget class="QMenu" name="menuBit_Slicing">
+     <property name="title">
+      <string>Bit Slicing</string>
+     </property>
+     <addaction name="actionRed_3"/>
+     <addaction name="actionGreen_3"/>
+     <addaction name="actionBlue_3"/>
+     <addaction name="actionGrayscale_2"/>
+    </widget>
     <addaction name="actionContrast_Stretching"/>
     <addaction name="menuTransformation"/>
     <addaction name="actionGray_Level_Slicing"/>
-    <addaction name="actionBit_Slicing"/>
+    <addaction name="menuBit_Slicing"/>
     <addaction name="separator"/>
     <addaction name="actionHistogram_Leveling"/>
     <addaction name="actionHistogram_Specification"/>
@@ -179,6 +189,7 @@
     <addaction name="menuHigh_Pass_Filter"/>
     <addaction name="actionUnsharp_Masking"/>
     <addaction name="actionHighboost_Filter"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOperations"/>
@@ -324,11 +335,6 @@
     <string>Gray Level Slicing</string>
    </property>
   </action>
-  <action name="actionBit_Slicing">
-   <property name="text">
-    <string>Bit Slicing</string>
-   </property>
-  </action>
   <action name="actionHistogram_Leveling">
    <property name="text">
     <string>Histogram Leveling</string>
@@ -437,6 +443,31 @@
   <action name="action270">
    <property name="text">
     <string>270</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionRed_3">
+   <property name="text">
+    <string>Red</string>
+   </property>
+  </action>
+  <action name="actionGreen_3">
+   <property name="text">
+    <string>Green</string>
+   </property>
+  </action>
+  <action name="actionBlue_3">
+   <property name="text">
+    <string>Blue</string>
+   </property>
+  </action>
+  <action name="actionGrayscale_2">
+   <property name="text">
+    <string>Grayscale</string>
    </property>
   </action>
  </widget>

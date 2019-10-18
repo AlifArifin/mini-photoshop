@@ -81,6 +81,42 @@ Grayscale::Grayscale(ifstream * file, ImageFormat imageFormat, ImageType imageTy
                 }
             }
             break;
+        } case (ImageFormat::RAW_IMAGE) : {
+            this->level = 255;
+            int counter = 0;
+            while (getline(*file, fileline)) {
+                if (counter == 0) {
+                    vector<string> words = Utils::split(fileline, ' ');
+
+                    if (words.size() == 2) {
+                        res.width = stoi(words[0]);
+                        res.height = stoi(words[1]);
+                    }
+                    this->resolution = res;
+
+                    this->pixel = new short*[res.height];
+                    for (int i = 0; i < res.height; i++) {
+                        this->pixel[i] = new short[res.width];
+                    }
+
+                    // init
+                    p = 0;
+                    q = 0;
+                } else {
+                    pixels = Utils::split(fileline, ' ');
+                    for (size_t i = 0; i < pixels.size(); i++) {
+                        this->pixel[p][q] = stoi(pixels[i]);
+                        if (q >= res.width - 1) {
+                            p++;
+                            q = 0;
+                        } else {
+                            q++;
+                        }
+                    }
+                }
+                counter++;
+            }
+            break;
         }
     }
 }

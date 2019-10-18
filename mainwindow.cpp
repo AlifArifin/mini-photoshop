@@ -514,6 +514,25 @@ void MainWindow::errorMessage(QString s) {
     msgBox.exec();
 }
 
+
+string MainWindow::inputString(QString title, QString question) {
+    bool ok;
+    QString text = QInputDialog::getText(
+                this,
+                title,
+                question,
+                QLineEdit::Normal,
+                "",
+                &ok
+            );
+
+    if (ok && !text.isEmpty()) {
+        return text.toStdString();
+    } else {
+        throw "Error";
+    }
+}
+
 int MainWindow::inputInt(QString title, QString question) {
     bool ok;
     QString text = QInputDialog::getText(
@@ -723,7 +742,7 @@ void MainWindow::histogram(Histogram h, bool normalized) {
 
     QValueAxis *axisY = new QValueAxis();
     if (normalized) {
-        axisY->setRange(0, 1);
+        axisY->setRange(0, h.max/h.total);
     } else {
         axisY->setRange(0, h.max);
     }
@@ -883,6 +902,22 @@ void MainWindow::transformation(Transformation t, float c, float gamma) {
                 QImage newImage = fromMonochrome(prev);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
+            break;
+        }
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Truecolor prev = tr->transformation(t, c, gamma);
+            QImage image = this->fromTruecolor(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -952,12 +987,29 @@ void MainWindow::on_actionGray_Level_Slicing_triggered()
                     QImage newImage = fromMonochrome(prev);
                     label->setPixmap(QPixmap::fromImage(newImage));
                 }
+            } case (ImageType::TRUECOLOR) : {
+                Truecolor * g = truecolors.at(imageIdx);
+                Truecolor prev = g->slicing(
+                            form.getA(),
+                            form.getB(),
+                            form.getMax()
+                        );
+
+                QImage image = this->fromTruecolor(prev);
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    truecolors.at(imageIdx) = new Truecolor(prev);
+                    QImage newImage = fromTruecolor(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
             }
         }
     }
 }
 
-void MainWindow::on_actionBit_Slicing_triggered()
+void MainWindow::bitPlane(PPMColorState color)
 {
     QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
     int idx = tabWidget->currentIndex();
@@ -972,11 +1024,7 @@ void MainWindow::on_actionBit_Slicing_triggered()
         } case (ImageType::GRAYSCALE) : {
             Grayscale * g = grayscales.at(imageIdx);
 
-            qInfo("bitplane");
-
             vector<Binary*> prev = g->bitSlicing();
-
-            qInfo("bitplane");
 
             QImage image0 = this->fromBinary(*prev[0]);
             QImage image1 = this->fromBinary(*prev[1]);
@@ -987,7 +1035,32 @@ void MainWindow::on_actionBit_Slicing_triggered()
             QImage image6 = this->fromBinary(*prev[6]);
             QImage image7 = this->fromBinary(*prev[7]);
 
-            qInfo("bitplane");
+            BitPlane bitPlane(this);
+            bitPlane.setBit0(image0);
+            bitPlane.setBit1(image1);
+            bitPlane.setBit2(image2);
+            bitPlane.setBit3(image3);
+            bitPlane.setBit4(image4);
+            bitPlane.setBit5(image5);
+            bitPlane.setBit6(image6);
+            bitPlane.setBit7(image7);
+
+            bitPlane.exec();
+
+            break;
+        } case (ImageType::TRUECOLOR) : {
+            Truecolor * g = truecolors.at(imageIdx);
+
+            vector<Binary*> prev = g->bitSlicing(color);
+
+            QImage image0 = this->fromBinary(*prev[0]);
+            QImage image1 = this->fromBinary(*prev[1]);
+            QImage image2 = this->fromBinary(*prev[2]);
+            QImage image3 = this->fromBinary(*prev[3]);
+            QImage image4 = this->fromBinary(*prev[4]);
+            QImage image5 = this->fromBinary(*prev[5]);
+            QImage image6 = this->fromBinary(*prev[6]);
+            QImage image7 = this->fromBinary(*prev[7]);
 
             BitPlane bitPlane(this);
             bitPlane.setBit0(image0);
@@ -1886,4 +1959,102 @@ void MainWindow::on_actionAbout_Image_triggered()
     window->resize(200, 200);
     window->setParent(this);
     window->show();
+}
+
+void MainWindow::on_actionAnd_triggered()
+{
+    try {
+        int c = inputInt("Operation And", "Insert index");
+        this->operations(c, Operation::AND);
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::on_actionOr_triggered()
+{
+    try {
+        int c = inputInt("Operation OR", "Insert index");
+        this->operations(c, Operation::OR);
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::on_actionGrayscale_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Grayscale prev = tr->toGrayscale();
+            QImage image = this->fromGrayscale(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+//            if (result == QDialog::Accepted) {
+//                truecolors.at(imageIdx) = new Truecolor(prev);
+//                QImage newImage = fromTruecolor(prev);
+//                label->setPixmap(QPixmap::fromImage(newImage));
+//            }
+        }
+    }
+}
+
+void MainWindow::on_actionGrayscale_2_triggered()
+{
+    this->bitPlane();
+}
+
+
+void MainWindow::on_actionRed_3_triggered()
+{
+    this->bitPlane(PPMColorState::RED);
+}
+
+void MainWindow::on_actionGreen_3_triggered()
+{
+    this->bitPlane(PPMColorState::GREEN);
+}
+
+void MainWindow::on_actionBlue_3_triggered()
+{
+    this->bitPlane(PPMColorState::BLUE);
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    string filename = this->inputString("Save", "Insert file name");
+
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            b->save(filename);
+            break;
+        }
+        case (ImageType::GRAYSCALE) : {
+            Grayscale * b = grayscales.at(imageIdx);
+            b->save(filename);
+            break;
+        }
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * b = truecolors.at(imageIdx);
+            b->save(filename);
+            break;
+        }
+    }
 }

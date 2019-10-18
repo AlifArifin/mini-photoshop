@@ -60,6 +60,7 @@ void Image::setImageType(ImageType imageType) {
 }
 
 ImageType Image::checkFile(string filename) {
+    qInfo(filename.c_str());
     ImageFormat imageFormat = Image::checkFormat(filename);
 
     switch (imageFormat) {
@@ -72,6 +73,7 @@ ImageType Image::checkFile(string filename) {
         case ImageFormat::PPM :
             return ImageType::TRUECOLOR;
         case ImageFormat::RAW_IMAGE :
+            return ImageType::GRAYSCALE;
         default :
             throw "File extention not found";
     }

@@ -9,6 +9,7 @@
 #include "ppm_state.h"
 #include "geometry.h"
 #include "padding.h"
+#include "grayscale.h"
 
 class Truecolor : public Image {
 private:
@@ -39,6 +40,7 @@ public:
     Truecolor operation(Truecolor * m, Operation o, short level = 255);
     Truecolor translastion(int m, int n);
     Truecolor geometry(Geometry degree);
+    Grayscale toGrayscale();
     Histogram generateHistogram(PPMColorState color);
     Truecolor convolution(Convolution c, Padding pad, int size, float** kernel);
     Truecolor sharpening(Truecolor * lowPass, float alpha = 1);
@@ -46,6 +48,9 @@ public:
     Truecolor histogramSpecification(Histogram hr,Histogram hg, Histogram hb);
     Truecolor zoom(bool in);
     Truecolor contrastStretching(int a, int b, int ya, int yb, float alpha = 1, float beta = 1, float gamma = 1);
+    Truecolor slicing(int a, int b, int max);
+    Truecolor transformation(Transformation t, float c, float gamma = 1);
+    vector<Binary*> bitSlicing(PPMColorState color);
 };
 
 #endif
