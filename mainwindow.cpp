@@ -1999,11 +1999,15 @@ void MainWindow::on_actionGrayscale_triggered()
             ImagePreview imagePreview(this);
             imagePreview.setImage(image);
             int result = imagePreview.exec();
-//            if (result == QDialog::Accepted) {
-//                truecolors.at(imageIdx) = new Truecolor(prev);
-//                QImage newImage = fromTruecolor(prev);
-//                label->setPixmap(QPixmap::fromImage(newImage));
-//            }
+
+            if (result == QDialog::Accepted) {
+                truecolors.erase(truecolors.begin() + imageIdx);
+                int newIdx = this->getVectorIdx(idx, ImageType::GRAYSCALE);
+                grayscales.insert(grayscales.begin() + newIdx, new Grayscale(prev));
+                QImage newImage = fromGrayscale(prev);
+                tabPage->setImageType(ImageType::GRAYSCALE);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
         }
     }
 }

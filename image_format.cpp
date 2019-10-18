@@ -33,6 +33,6 @@ string image_format::toString(ImageFormat imageFormat) {
         case (ImageFormat::BMP) :
             return "BMP";
         default :
-            return "";
+            return " ";
     }
 }
