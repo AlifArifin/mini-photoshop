@@ -118,6 +118,9 @@
     <addaction name="menuBoolean"/>
     <addaction name="separator"/>
     <addaction name="menuGeometry"/>
+    <addaction name="separator"/>
+    <addaction name="actionBinary_Segmentation"/>
+    <addaction name="actionThinning"/>
    </widget>
    <widget class="QMenu" name="menuHistogram">
     <property name="title">
@@ -191,10 +194,23 @@
     <addaction name="actionHighboost_Filter"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuEdge_Detection">
+    <property name="title">
+     <string>E&amp;dge Detection</string>
+    </property>
+    <addaction name="actionGradient"/>
+    <addaction name="actionLaplace"/>
+    <addaction name="actionLaplace_of_Gaussian"/>
+    <addaction name="actionSobel"/>
+    <addaction name="actionPrewitt"/>
+    <addaction name="actionRoberts"/>
+    <addaction name="actionCanny"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOperations"/>
    <addaction name="menuHistogram"/>
    <addaction name="menuEnhancement"/>
+   <addaction name="menuEdge_Detection"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -468,6 +484,51 @@
   <action name="actionGrayscale_2">
    <property name="text">
     <string>Grayscale</string>
+   </property>
+  </action>
+  <action name="actionGradient">
+   <property name="text">
+    <string>Gradient</string>
+   </property>
+  </action>
+  <action name="actionLaplace">
+   <property name="text">
+    <string>Laplace</string>
+   </property>
+  </action>
+  <action name="actionLaplace_of_Gaussian">
+   <property name="text">
+    <string>Laplace of Gaussian</string>
+   </property>
+  </action>
+  <action name="actionSobel">
+   <property name="text">
+    <string>Sobel</string>
+   </property>
+  </action>
+  <action name="actionPrewitt">
+   <property name="text">
+    <string>Prewitt</string>
+   </property>
+  </action>
+  <action name="actionRoberts">
+   <property name="text">
+    <string>Roberts</string>
+   </property>
+  </action>
+  <action name="actionCanny">
+   <property name="text">
+    <string>Canny</string>
+   </property>
+  </action>
+  <action name="actionBinary_Segmentation">
+   <property name="text">
+    <string>Binary Segmentation</string>
+   </property>
+  </action>
+  <action name="actionThinning">
+   <property name="text">
+    <string>Thinning</string>
    </property>
   </action>
  </widget>

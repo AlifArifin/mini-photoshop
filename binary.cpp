@@ -101,3 +101,57 @@ Binary Binary::Not() {
 
     return bNew;
 }
+
+Binary Binary::thinning() {
+    Binary bNew(*this);
+
+    int offset = 1;
+
+    int * per = new int[9];
+    bool end = true;
+
+    do {
+        end = true;
+        for (int i = 1; i < bNew.resolution.height - 1; i++) {
+            for (int j = 1; j < bNew.resolution.width - 1; j++) {
+                if (bNew.pixel[i][j] == 1) {
+                    int count = 0;
+                    for (int p = i - 1; p <= i + 1; p++) {
+                        for (int q = j - 1; q <= j + 1; q++) {
+                            if (bNew.pixel[p][q] == 1) {
+                                count++;
+                            }
+                        }
+                    }
+
+                    if (count > 2 && count < 8) {
+                        int trans = 0;
+
+                        per[0] = bNew.pixel[i - 1][j];
+                        per[1] = bNew.pixel[i - 1][j + 1];
+                        per[2] = bNew.pixel[i][j + 1];
+                        per[3] = bNew.pixel[i + 1][j + 1];
+                        per[4] = bNew.pixel[i + 1][j];
+                        per[5] = bNew.pixel[i + 1][j - 1];
+                        per[6] = bNew.pixel[i][j - 1];
+                        per[7] = bNew.pixel[i - 1][j - 1];
+                        per[8] = bNew.pixel[i - 1][j];
+
+                        for (int i = 0; i < 8; i++) {
+                            if (per[i] == 0 && per[i + 1] == 1) {
+                                trans++;
+                            }
+                        }
+
+                        if (trans == 1) {
+                            bNew.pixel[i][j] = 0;
+                            end = false;
+                        }
+                    }
+                }
+            }
+        }
+    } while (!end);
+
+    return bNew;
+}

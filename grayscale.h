@@ -10,6 +10,7 @@
 
 class Grayscale : public Monochrome {
 public:
+    Grayscale();
     Grayscale(ifstream * file, ImageFormat imageFormat, ImageType imageType);
     Grayscale(ImageFormat imageFormat, Resolution resolution, int level);
     Grayscale(const Grayscale & grayscale);
@@ -18,6 +19,8 @@ public:
     Grayscale transformation(Transformation t, float c, float gamma = 1);
     Grayscale slicing(int a, int b, int max = 255);
     vector<Binary*> bitSlicing();
+    Binary edgeDetection(EdgeDetection e, int t = 100, int c = 1);
+    Binary binarySegmentation(int t);
 };
 
 #endif

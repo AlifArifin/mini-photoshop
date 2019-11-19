@@ -24,12 +24,12 @@ Truecolor::Truecolor(string filename, ImageFormat imageFormat, ImageType ImageTy
     int counter = 0;
     PPMColorState state = PPMColorState::RED;
     this->pixel = new RGBA*[this->resolution.height];
-    for (int i = 0; i < this->resolution.height; i++) {
+    for (int i = this->resolution.height - 1; i >= 0; i--) {
         this->pixel[i] = new RGBA[this->resolution.width];
         for (int j = 0; j < this->resolution.width; j++) {
-            this->pixel[i][j].r = (short) bmp.data.at(counter++);
-            this->pixel[i][j].g = (short) bmp.data.at(counter++);
             this->pixel[i][j].b = (short) bmp.data.at(counter++);
+            this->pixel[i][j].g = (short) bmp.data.at(counter++);
+            this->pixel[i][j].r = (short) bmp.data.at(counter++);
         }
     }
 }
@@ -95,12 +95,12 @@ Truecolor::Truecolor(ifstream * file, ImageFormat imageFormat, ImageType imageTy
                         for (size_t i = 0; i < pixels.size(); i++) {
                             if (ppmColorState == PPMColorState::RED) {
                                 this->pixel[p][q].r = stoi(pixels[i]);
-                                ppmColorState = PPMColorState::BLUE;
-                            } else if (ppmColorState == PPMColorState::BLUE) {
-                                this->pixel[p][q].b = stoi(pixels[i]);
                                 ppmColorState = PPMColorState::GREEN;
-                            } else {
+                            } else if (ppmColorState == PPMColorState::GREEN) {
                                 this->pixel[p][q].g = stoi(pixels[i]);
+                                ppmColorState = PPMColorState::BLUE;
+                            } else {
+                                this->pixel[p][q].b = stoi(pixels[i]);
                                 ppmColorState = PPMColorState::RED;
                                 if (q >= res.width - 1) {
                                     qInfo("lala");

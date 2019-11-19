@@ -20,6 +20,7 @@ Monochrome::Monochrome() {
 }
 
 Monochrome::Monochrome(const Monochrome & monochrome) : Image(monochrome) {
+    qInfo("lalala");
     this->level = monochrome.level;
     this->pixel = new short*[this->resolution.height];
     for (int i = 0; i < this->resolution.height; i++) {
@@ -107,11 +108,10 @@ void Monochrome::save(string filename) {
     qInfo("saved");
 }
 
-template <class T>
-T ** Monochrome::initPixel(int h, int w) {
-    T ** p = new T*[h];
+float ** Monochrome::initPixel(int h, int w) {
+    float ** p = new float*[h];
     for (int i = 0; i < h; i++) {
-        p[i] = new T[w];
+        p[i] = new float[w];
         for (int j = 0; j < w; j++) {
             p[i][j] = 0;
         }
@@ -402,7 +402,6 @@ Monochrome Monochrome::convolution(Convolution c, Padding pad, int size, float**
     qInfo("convol");
 
     for (int i = 0; i < this->resolution.height; i++) {
-        qInfo("convol");
         for (int j = 0; j < this->resolution.width; j++) {
             if (i >= offset && j >= offset && i < this->resolution.height - offset && j < this->resolution.width - offset) {
                 float temp = 0;
@@ -411,6 +410,7 @@ Monochrome Monochrome::convolution(Convolution c, Padding pad, int size, float**
                     int n = 0;
                     for (int q = j - offset; n < size; q++, n++) {
                         switch (c) {
+                            case (Convolution::NO_CLIPPING) : 
                             case (Convolution::BASIC) : {
                                 temp += this->pixel[p][q] * kernel[m][n];
                                 break;
@@ -449,6 +449,8 @@ Monochrome Monochrome::convolution(Convolution c, Padding pad, int size, float**
         }
     }
 
+    qInfo("convol end");
+
     return mNew;
 }
 
@@ -460,8 +462,8 @@ Monochrome Monochrome::convolutionTopLeft(Convolution c, int sizeX, int sizeY, f
         this->level
     );
 
-    for (int i = 0; i <= this->resolution.height - sizeX; i++) {
-        for (int j = 0; j <= this->resolution.width - sizeY; j++) {
+    for (int i = 0; i < this->resolution.height - sizeX; i++) {
+        for (int j = 0; j < this->resolution.width - sizeY; j++) {
             float temp = 0;
             for (int p = 0; p < sizeX; p++) {
                 for (int q = 0; q < sizeY; q++) {
@@ -557,67 +559,6 @@ Monochrome Monochrome::histogramSpecification(Histogram h) {
     for (int i = 0; i < this->resolution.height; i++) {
         for (int j = 0; j < this->resolution.width; j++) {
             mNew.pixel[i][j] = newMapping[this->pixel[i][j]];
-        }
-    }
-
-    return mNew;
-}
-
-Monochrome Monochrome::edgeDetection(EdgeDetection e, int c) {
-    Monochrome mNew;
-    Monochrome x;
-    Monochrome y;
-
-    float ** kernelx;
-    float ** kernely;
-
-    switch (e) {
-        case (EdgeDetection::GRADIENT) : {
-            kernelx = Monochrome::initPixel<float>(2, 1);
-            kernelx[0][0] = -1; kernelx[1][0] = 1;
-            x = this->convolutionTopLeft(Convolution::NO_CLIPPING, 1, 2, kernelx);
-
-            kernely = Monochrome::initPixel<float>(1, 2);
-            kernelx[0][0] = -1; kernelx[0][1] = 1;
-            y = this->convolutionTopLeft(Convolution::NO_CLIPPING, 1, 2, kernely);
-
-            mNew = x.operation(&y, Operation::ADD_ABS, this->level);
-
-            for (int i = 0; i < 2; i++) {
-                delete [] kernelx[i];
-            }
-            delete [] kernelx;
-
-            for (int i = 0; i < 1; i++) {
-                delete [] kernely[i];
-            }
-            delete [] kernely;
-
-            break;
-        }
-        case (EdgeDetection::PREWITT) :
-            c = 1;
-        case (EdgeDetection::SOBEL) : {
-            kernelx = Monochrome::initPixel<float>(3, 3);
-            kernelx[0][0] = -1; kernelx[1][0] = c * -1; kernelx[2][0] = -1;
-            kernelx[0][2] = 1; kernelx[1][2] = c * 1; kernelx[2][2] = 1;
-            x = this->convolution(Convolution::NO_CLIPPING, Padding::ZERO, 3, kernelx);
-
-            kernely = Monochrome::initPixel<float>(3, 3);
-            kernely[0][0] = 1; kernely[0][1] = c * 1; kernely[0][2] = 1;
-            kernely[2][0] = -1; kernely[2][1] = c * -1; kernely[2][2] = -1;
-            y = this->convolution(Convolution::NO_CLIPPING, Padding::ZERO, 3, kernely);
-            
-            mNew = x.operation(&y, Operation::ADD_ABS, this->level);
-
-            for (int i = 0; i < 3; i++) {
-                delete [] kernelx[i];
-                delete [] kernely[i];
-            }
-            delete [] kernelx;
-            delete [] kernely;
-
-            break;
         }
     }
 

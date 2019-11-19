@@ -9,6 +9,7 @@ SOURCES += \
     dialoghistogram.cpp \
     formcontrast.cpp \
     formgrayslicing.cpp \
+    formsobel.cpp \
     formtransformationlog.cpp \
     formtranslation.cpp \
     grayscale.cpp \
@@ -30,6 +31,7 @@ FORMS += \
     dialoghistogram.ui \
     formcontrast.ui \
     formgrayslicing.ui \
+    formsobel.ui \
     formtransformationlog.ui \
     formtranslation.ui \
     imagepreview.ui \
@@ -46,6 +48,7 @@ HEADERS += \
     edge_detection.h \
     formcontrast.h \
     formgrayslicing.h \
+    formsobel.h \
     formtransformationlog.h \
     formtranslation.h \
     geometry.h \

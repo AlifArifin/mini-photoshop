@@ -9,6 +9,10 @@
 #include <vector>
 #include <QDebug>
 
+Grayscale::Grayscale() {
+    
+}
+
 Grayscale::Grayscale(ifstream * file, ImageFormat imageFormat, ImageType imageType) : Monochrome(imageFormat, imageType) {
     qInfo("create grayscale");
     Resolution res;
@@ -259,4 +263,262 @@ vector<Binary*> Grayscale::bitSlicing() {
     }
 
     return vec;
+}
+
+Binary Grayscale::edgeDetection(EdgeDetection e, int t, int c) {
+    Binary res(ImageFormat::NONE, this->resolution);
+
+    float ** kernelx;
+    float ** kernely;
+
+    switch (e) {
+        case (EdgeDetection::GRADIENT) : {
+            qInfo("edge detection gradient");
+            kernelx = Monochrome::initPixel(2, 1);
+            kernelx[0][0] = -1; kernelx[1][0] = 1;
+            Grayscale x = this->convolutionTopLeft(Convolution::NO_CLIPPING, 2, 1, kernelx);
+
+            qInfo(to_string(x.pixel[0][0]).c_str());
+
+            qInfo("edge detection gradient");
+            kernely = Monochrome::initPixel(1, 2);
+            kernely[0][0] = -1; kernely[0][1] = 1;
+            Grayscale y = this->convolutionTopLeft(Convolution::NO_CLIPPING, 1, 2, kernely);
+
+            qInfo(to_string(y.pixel[0][0]).c_str());
+
+            qInfo("edge detection gradient");
+            Grayscale mNew = x.operation(&y, Operation::ADD_ABS, this->level);
+
+            qInfo("edge detection gradient");
+            for (int i = 0; i < mNew.resolution.height; i++) {
+                for (int j = 0; j < mNew.resolution.width; j++) {
+                    if (mNew.pixel[i][j] >= t) {
+                        res.setIndividualPixel(i, j, 1);
+                    } else {
+                        res.setIndividualPixel(i, j, 0);
+                    }
+                }
+            }
+
+            qInfo("edge detection gradient");
+            for (int i = 0; i < 2; i++) {
+                delete [] kernelx[i];
+            }
+            delete [] kernelx;
+
+            for (int i = 0; i < 1; i++) {
+                delete [] kernely[i];
+            }
+            delete [] kernely;
+
+            qInfo("edge detection gradient");
+            break;
+        }
+        case (EdgeDetection::LAPLACE) : {
+            kernelx = Monochrome::initPixel(3, 3);
+            kernelx[0][0] = 0; kernelx[0][1] = 1;  kernelx[0][2] = 0;
+            kernelx[1][0] = 1; kernelx[1][1] = -4; kernelx[1][2] = 1;
+            kernelx[2][0] = 0; kernelx[2][1] = 1;  kernelx[2][2] = 0;
+
+            Grayscale mNew = this->convolution(Convolution::NO_CLIPPING, Padding::ZERO, 3, kernelx);
+
+            qInfo(to_string(mNew.pixel[0][0]).c_str());
+
+            qInfo(mNew.toString().c_str());
+
+            // x
+            short pxl_bef = 0;
+            for (int i = 0; i < mNew.resolution.height; i++) {
+                for (int j = 0; j < mNew.resolution.width; j++) {
+                    if (j != 0) {
+                        if ((pxl_bef < 0 && mNew.pixel[i][j] > 0) || (pxl_bef > 0 && mNew.pixel[i][j] < 0)) {
+                            res.setIndividualPixel(i, j, 1);
+                        }
+                    }
+                    pxl_bef = mNew.pixel[i][j];
+                }
+            }
+
+            qInfo("lalala");
+
+            // y
+            for (int j = 0; j < mNew.resolution.width; j++) {
+                for (int i = 0; i < mNew.resolution.height; i++) {
+                    if (i != 0) {
+                        if ((pxl_bef < 0 && mNew.pixel[i][j] > 0) || (pxl_bef > 0 && mNew.pixel[i][j] < 0)) {
+                            res.setIndividualPixel(i, j, 1);
+                        }
+                    }
+                    pxl_bef = mNew.pixel[i][j];
+                }
+            }
+
+            qInfo("lalala");
+
+            for (int i = 0; i < 3; i++) {
+                delete [] kernelx[i];
+            }
+            delete [] kernelx;
+
+            break;
+        }
+        case (EdgeDetection::L_O_G) : {
+            kernelx = Monochrome::initPixel(5, 5);
+            kernelx[0][0] =  0; kernelx[0][1] =  0; kernelx[0][2] = -1; kernelx[0][3] =  0; kernelx[0][4] =  0;
+            kernelx[1][0] =  0; kernelx[1][1] = -1; kernelx[1][2] = -2; kernelx[1][3] = -1; kernelx[1][4] =  0;
+            kernelx[2][0] = -1; kernelx[2][1] = -2; kernelx[2][2] = 16; kernelx[2][3] = -2; kernelx[2][4] = -1;
+            kernelx[3][0] =  0; kernelx[3][1] = -1; kernelx[3][2] = -2; kernelx[3][3] = -1; kernelx[3][4] =  0;
+            kernelx[4][0] =  0; kernelx[4][1] =  0; kernelx[4][2] = -1; kernelx[4][3] =  0; kernelx[4][4] =  0;
+
+            Grayscale mNew = this->convolution(Convolution::NO_CLIPPING, Padding::ZERO, 5, kernelx);
+
+            // x
+            short pxl_bef = 0;
+            for (int i = 0; i < mNew.resolution.height; i++) {
+                for (int j = 0; j < mNew.resolution.width; j++) {
+                    if (j != 0) {
+                        if ((pxl_bef < 0 && mNew.pixel[i][j] > 0) || (pxl_bef > 0 && mNew.pixel[i][j] < 0)) {
+                            res.setIndividualPixel(i, j, 1);
+                        }
+                    }
+                    pxl_bef = mNew.pixel[i][j];
+                }
+            }
+
+            for (int j = 0; j < mNew.resolution.width; j++) {
+                for (int i = 0; i < mNew.resolution.height; i++) {
+                    if (i != 0) {
+                        if ((pxl_bef < 0 && mNew.pixel[i][j] > 0) || (pxl_bef > 0 && mNew.pixel[i][j] < 0)) {
+                            res.setIndividualPixel(i, j, 1);
+                        }
+                    }
+                    pxl_bef = mNew.pixel[i][j];
+                }
+            }
+
+            for (int i = 0; i < 5; i++) {
+                delete [] kernelx[i];
+            }
+            delete [] kernelx;
+            break;
+        }
+        case (EdgeDetection::PREWITT) :
+            c = 1;
+        case (EdgeDetection::SOBEL) : {
+            qInfo("sobel");
+            
+            kernelx = Monochrome::initPixel(3, 3);
+            kernelx[0][0] = -1; kernelx[1][0] = c * -1; kernelx[2][0] = -1;
+            kernelx[0][2] = 1; kernelx[1][2] = c * 1; kernelx[2][2] = 1;
+            Grayscale x = this->convolution(Convolution::NO_CLIPPING, Padding::ZERO, 3, kernelx);
+
+            qInfo("sobel");
+            
+            kernely = Monochrome::initPixel(3, 3);
+            kernely[0][0] = 1; kernely[0][1] = c * 1; kernely[0][2] = 1;
+            kernely[2][0] = -1; kernely[2][1] = c * -1; kernely[2][2] = -1;
+            Grayscale y = this->convolution(Convolution::NO_CLIPPING, Padding::ZERO, 3, kernely);
+            
+            qInfo("sobel");
+            
+            Grayscale mNew = x.operation(&y, Operation::ADD_ABS, this->level);
+
+            qInfo("sobel");
+            
+            for (int i = 0; i < mNew.resolution.height; i++) {
+                for (int j = 0; j < mNew.resolution.width; j++) {
+                    if (mNew.pixel[i][j] >= t) {
+                        res.setIndividualPixel(i, j, 1);
+                    } else {
+                        res.setIndividualPixel(i, j, 0);
+                    }
+                }
+            }
+
+            qInfo("sobel");
+
+            for (int i = 0; i < 3; i++) {
+                delete [] kernelx[i];
+                delete [] kernely[i];
+            }
+            delete [] kernelx;
+            delete [] kernely;
+
+            break;
+        }
+        case (EdgeDetection::ROBERTS) : {
+            kernelx = Monochrome::initPixel(2, 2);
+            kernelx[0][0] = 1; kernelx[0][1] =  0; 
+            kernelx[1][0] = 0; kernelx[1][1] = -1; 
+            Grayscale x = this->convolutionTopLeft(Convolution::NO_CLIPPING, 2, 2, kernelx);
+
+            kernely = Monochrome::initPixel(2, 2);
+            kernely[0][0] =  0; kernely[0][1] = 1; 
+            kernely[1][0] = -1; kernely[1][1] = 0; 
+            Grayscale y = this->convolutionTopLeft(Convolution::NO_CLIPPING, 2, 2, kernely);
+
+            Grayscale mNew = x.operation(&y, Operation::ADD_ABS, this->level);
+
+            qInfo(to_string(t).c_str());
+
+            for (int i = 0; i < mNew.resolution.height; i++) {
+                for (int j = 0; j < mNew.resolution.width; j++) {
+                    if (mNew.pixel[i][j] >= t) {
+                        res.setIndividualPixel(i, j, 1);
+                    } else {
+                        res.setIndividualPixel(i, j, 0);
+                    }
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                delete [] kernelx[i];
+                delete [] kernely[i];
+            }
+            delete [] kernelx;
+            delete [] kernely;
+
+            break;
+        }
+        case (EdgeDetection::CANNY) : {
+            kernelx = Monochrome::initPixel(5, 5);
+            kernelx[0][0] = 1/273.0; kernelx[0][1] =  4/273.0; kernelx[0][2] = 7/273.0; kernelx[0][3] =  4/273.0; kernelx[0][4] =  1/273.0;
+            kernelx[1][0] = 4/273.0; kernelx[1][1] = 16/273.0; kernelx[1][2] = 26/273.0; kernelx[1][3] = 16/273.0; kernelx[1][4] =  4/273.0;
+            kernelx[2][0] = 7/273.0; kernelx[2][1] = 26/273.0; kernelx[2][2] = 41/273.0; kernelx[2][3] = 26/273.0; kernelx[2][4] = 7/273.0;
+            kernelx[3][0] = 4/273.0; kernelx[3][1] = 16/273.0; kernelx[3][2] = 26/273.0; kernelx[3][3] = 16/273.0; kernelx[3][4] =  4/273.0;
+            kernelx[4][0] = 1/273.0; kernelx[4][1] =  4/273.0; kernelx[4][2] = 7/273.0; kernelx[4][3] =  4/273.0; kernelx[4][4] =  1/273.0;
+
+            Grayscale x = this->convolution(Convolution::NO_CLIPPING, Padding::SAME, 5, kernelx);
+
+            for (int i = 0; i < 5; i++) {
+                delete [] kernelx[i];
+            }
+            delete [] kernelx;
+
+            Binary res2 = x.edgeDetection(EdgeDetection::SOBEL, t, c);
+
+            return res2;
+
+            break;
+        }
+    }
+
+    return res;
+}
+
+Binary Grayscale::binarySegmentation(int t) {
+    Binary res(ImageFormat::NONE, this->resolution);
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            if (this->pixel[i][j] >= t) {
+                res.setIndividualPixel(i, j, 1);
+            } else {
+                res.setIndividualPixel(i, j, 0);
+            }
+        }
+    }
+
+    return res;
 }

@@ -15,6 +15,7 @@ public:
 
     // image processing
     Binary Not();
+    Binary thinning();
 };
 
 #endif

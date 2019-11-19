@@ -34,8 +34,7 @@ public:
 
     void save(string filename);
 
-    template <class T>
-    static T ** initPixel(int h, int w);
+    static float ** initPixel(int h, int w);
 
     // image processing
     Monochrome negative();
@@ -49,7 +48,6 @@ public:
     Monochrome sharpening(Monochrome * lowPass, float alpha = 1);
     Monochrome histogramLeveling();
     Monochrome histogramSpecification(Histogram h);
-    Monochrome edgeDetection(EdgeDetection e, int c = 1);
     Monochrome zoom(bool in);
 };
 

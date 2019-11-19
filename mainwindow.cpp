@@ -23,6 +23,7 @@
 #include "rgba.h"
 #include "ppm_state.h"
 #include "formtranslation.h"
+#include "formsobel.h"
 #include <QFileDialog>
 #include <QTabBar>
 #include <QTabWidget>
@@ -848,6 +849,7 @@ void MainWindow::on_actionContrast_Stretching_triggered()
                     QImage newImage = fromMonochrome(prev);
                     label->setPixmap(QPixmap::fromImage(newImage));
                 }
+                break;
             } case (ImageType::TRUECOLOR) : {
                 Truecolor * tr = truecolors.at(imageIdx);
                 Truecolor prev = tr->contrastStretching(
@@ -987,6 +989,7 @@ void MainWindow::on_actionGray_Level_Slicing_triggered()
                     QImage newImage = fromMonochrome(prev);
                     label->setPixmap(QPixmap::fromImage(newImage));
                 }
+                break;
             } case (ImageType::TRUECOLOR) : {
                 Truecolor * g = truecolors.at(imageIdx);
                 Truecolor prev = g->slicing(
@@ -1139,6 +1142,21 @@ void MainWindow::on_actionHistogram_Leveling_triggered()
             if (result == QDialog::Accepted) {
                 grayscales.at(imageIdx) = new Grayscale(prev);
                 QImage newImage = fromMonochrome(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        }
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * g = truecolors.at(imageIdx);
+            Truecolor prev = g->histogramLeveling();
+
+            QImage image = this->fromTruecolor(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                truecolors.at(imageIdx) = new Truecolor(prev);
+                QImage newImage = fromTruecolor(prev);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
             break;
@@ -1906,6 +1924,8 @@ void MainWindow::on_actionAbout_Image_triggered()
     format->setText("Format Type");
     QLabel *format_value = new QLabel(window);
 
+    qInfo("tes");
+
     QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
     int idx = tabWidget->currentIndex();
     TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
@@ -1918,10 +1938,15 @@ void MainWindow::on_actionAbout_Image_triggered()
             Binary * b = binaries.at(imageIdx);
 
             width_value->setNum((int) b->getResolution().width);
+            qInfo("tes");
             height_value->setNum((int) b->getResolution().height);
+            qInfo("tes");
             level_value->setNum(b->getLevel());
+            qInfo("tes");
             type_value->setText("Binary");
+            qInfo("tes");
             format_value->setText(image_format::toString(b->getImageFormat()).c_str());
+            qInfo("tes");
             break;
         }
         case (ImageType::GRAYSCALE) : {
@@ -2058,6 +2083,200 @@ void MainWindow::on_actionSave_triggered()
         case (ImageType::TRUECOLOR) : {
             Truecolor * b = truecolors.at(imageIdx);
             b->save(filename);
+            break;
+        }
+    }
+}
+
+void MainWindow::edgeDetection(EdgeDetection e, int t, int c) {
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            errorMessage("Cannot used for Binary");
+            break;
+        } case (ImageType::GRAYSCALE) : {
+            Grayscale * g = grayscales.at(imageIdx);
+            Binary b = g->edgeDetection(e, t, c);
+
+            QImage image = this->fromBinary(b);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                grayscales.erase(grayscales.begin() + imageIdx);
+                int newIdx = this->getVectorIdx(idx, ImageType::BINARY);
+                binaries.insert(binaries.begin() + newIdx, new Binary(b));
+                QImage newImage = fromBinary(b);
+                tabPage->setImageType(ImageType::BINARY);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        } case (ImageType::TRUECOLOR) : {
+            errorMessage("Cannot used for Truecolor");
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionGradient_triggered()
+{
+    try {
+        int t = inputInt("Edge detection gradient", "Insert threshold");
+        this->edgeDetection(EdgeDetection::GRADIENT, t);
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::on_actionLaplace_triggered()
+{
+    this->edgeDetection(EdgeDetection::LAPLACE);
+}
+
+void MainWindow::on_actionLaplace_of_Gaussian_triggered()
+{
+    this->edgeDetection(EdgeDetection::L_O_G);
+}
+
+void MainWindow::on_actionSobel_triggered()
+{
+    formsobel form(this);
+    form.setWindowTitle("Edge detection Sobel");
+    int result = form.exec();
+
+    qInfo("after form");
+
+    if (result == QDialog::Accepted) {
+        qInfo(to_string(form.getThreshold()).c_str());
+        qInfo(to_string(form.getC()).c_str());
+
+        this->edgeDetection(EdgeDetection::SOBEL, form.getThreshold(), form.getC());
+    }
+}
+
+void MainWindow::on_actionPrewitt_triggered()
+{
+    try {
+        int t = inputInt("Edge detection Prewitt", "Insert threshold");
+        this->edgeDetection(EdgeDetection::PREWITT, t);
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::on_actionRoberts_triggered()
+{
+    try {
+        int t = inputInt("Edge detection Prewitt", "Insert threshold");
+        this->edgeDetection(EdgeDetection::ROBERTS, t);
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::on_actionCanny_triggered()
+{
+    formsobel form(this);
+    form.setWindowTitle("Edge detection Canny");
+    int result = form.exec();
+
+    qInfo("after form");
+
+    if (result == QDialog::Accepted) {
+        qInfo(to_string(form.getThreshold()).c_str());
+        qInfo(to_string(form.getC()).c_str());
+
+        this->edgeDetection(EdgeDetection::CANNY, form.getThreshold(), form.getC());
+    }
+}
+
+void MainWindow::on_actionBinary_Segmentation_triggered()
+{
+    try {
+        int t = inputInt("Binary Segmentation", "Insert threshold");
+        QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+        int idx = tabWidget->currentIndex();
+        TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+        QLabel * label = tabPage->findChild<QLabel*>("label");
+        int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+        switch (tabPage->getImageType()) {
+            case (ImageType::GRAYSCALE) : {
+                Grayscale * g = grayscales.at(imageIdx);
+                Binary prev = g->binarySegmentation(t);
+
+                QImage image = this->fromBinary(prev);
+
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    grayscales.erase(grayscales.begin() + imageIdx);
+                    int newIdx = this->getVectorIdx(idx, ImageType::BINARY);
+                    binaries.insert(binaries.begin() + newIdx, new Binary(prev));
+                    QImage newImage = fromBinary(prev);
+                    tabPage->setImageType(ImageType::BINARY);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            }
+            case (ImageType::TRUECOLOR) : {
+                Truecolor * tr = truecolors.at(imageIdx);
+                Grayscale g = tr->toGrayscale();
+                Binary prev = g.binarySegmentation(t);
+
+                QImage image = this->fromBinary(prev);
+
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    truecolors.erase(truecolors.begin() + imageIdx);
+                    int newIdx = this->getVectorIdx(idx, ImageType::BINARY);
+                    binaries.insert(binaries.begin() + newIdx, new Binary(prev));
+                    QImage newImage = fromBinary(prev);
+                    tabPage->setImageType(ImageType::BINARY);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            }
+        }
+    } catch (const char* msg) {
+
+    }
+}
+
+void MainWindow::on_actionThinning_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            Binary prev = b->thinning();
+
+            QImage image = this->fromBinary(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                binaries.at(imageIdx) = new Binary(prev);
+                QImage newImage = fromBinary(prev);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
+        } default : {
+            errorMessage("Cannot used for Binary");
             break;
         }
     }

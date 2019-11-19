@@ -131,6 +131,24 @@ private slots:
 
     void on_actionSave_triggered();
 
+    void on_actionGradient_triggered();
+
+    void on_actionLaplace_triggered();
+
+    void on_actionLaplace_of_Gaussian_triggered();
+
+    void on_actionSobel_triggered();
+
+    void on_actionPrewitt_triggered();
+
+    void on_actionRoberts_triggered();
+
+    void on_actionCanny_triggered();
+
+    void on_actionBinary_Segmentation_triggered();
+
+    void on_actionThinning_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;
@@ -156,6 +174,7 @@ private:
     QString inputComboBox(QString title, QString question, QStringList list);
     string inputString(QString title, QString question);
     void bitPlane(PPMColorState color = PPMColorState::RED);
+    void edgeDetection(EdgeDetection e, int t = 100, int c = 1);
 };
 
 #endif // MAINWINDOW_H
