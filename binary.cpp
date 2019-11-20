@@ -3,11 +3,13 @@
 #include "image_format.h"
 #include "image_type.h"
 #include <vector>
+#include <set>
 #include "pbm_state.h"
 #include "utils.h"
 #include <fstream>
 #include <QDebug>
 #include <cstring>
+#include <algorithm>
 
 Binary::Binary() {
 
@@ -154,4 +156,104 @@ Binary Binary::thinning() {
     } while (!end);
 
     return bNew;
+}
+
+Monochrome Binary::cclTwoPass() {
+    qInfo("ccl");
+    vector<set<short>> linked;
+    Monochrome labels(
+        this->imageFormat,
+        ImageType::GRAYSCALE,
+        this->resolution,
+        255
+    );
+
+    linked.push_back({0});
+
+    short currlabel = 1;
+    set<short>::iterator it;
+
+    qInfo("ccl");
+    
+    // first pass
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {            
+            if (this->pixel[i][j]) {
+                set<short> neighbors;
+                
+                if (i - 1 >= 0 && j - 1 >= 0) {
+                    if (this->pixel[i - 1][j - 1]) {
+                        neighbors.insert(labels.getIndividualPixel(i - 1, j - 1));
+                    }
+                }
+
+                if (i - 1 >= 0) {
+                    if (this->pixel[i - 1][j]) {
+                        neighbors.insert(labels.getIndividualPixel(i - 1, j));
+                    }
+                }
+
+                if (i - 1 >= 0 && j + 1 < this->resolution.width) {
+                    if (this->pixel[i - 1][j + 1]) {
+                        neighbors.insert(labels.getIndividualPixel(i - 1, j + 1));
+                    }
+                }
+
+                if (j - 1 > 0) {
+                    if (this->pixel[i][j - 1]) {
+                        neighbors.insert(labels.getIndividualPixel(i, j - 1));
+                    }
+                }
+
+                // if neighbors is empty set
+                if (neighbors.empty()) {
+                    linked.push_back({currlabel});
+                    labels.setIndividualPixel(i, j, currlabel);
+                    currlabel++;
+                } else {
+                    short min = -1;
+                    for (it = neighbors.begin(); it != neighbors.end(); ++it)
+                    {
+                        linked[*it].insert(neighbors.begin(), neighbors.end());
+
+                        if (min == -1) {
+                            min = *it;
+                        } else if (*it < min) {
+                            min = *it;
+                        }
+                    }
+                    labels.setIndividualPixel(i, j, min);
+                }
+            }
+        }
+    }
+
+    vector<short> dict_cll;
+
+    dict_cll.push_back(0);
+
+    for (int i = 1; i < linked.size(); i++) {
+        short min = -1;
+        for (it = linked[i].begin(); it != linked[i].end(); ++it) {
+            if (min == -1) {
+                min = *it;
+            } else if (*it < min) {
+                min = *it;
+            }
+        }
+        dict_cll.push_back(min);
+    }
+
+    // second pass
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {            
+            if (this->pixel[i][j]) {
+                labels.setIndividualPixel(i, j, dict_cll.at(labels.getIndividualPixel(i, j)));
+            }
+        }
+    }
+
+    labels.setLevel(currlabel);
+
+    return labels;
 }

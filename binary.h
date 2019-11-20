@@ -16,6 +16,7 @@ public:
     // image processing
     Binary Not();
     Binary thinning();
+    Monochrome cclTwoPass();
 };
 
 #endif

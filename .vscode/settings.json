@@ -3,6 +3,8 @@
         "vector": "cpp",
         "iosfwd": "cpp",
         "string": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "xtree": "cpp",
+        "set": "cpp"
     }
 }

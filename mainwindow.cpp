@@ -2033,6 +2033,26 @@ void MainWindow::on_actionGrayscale_triggered()
                 tabPage->setImageType(ImageType::GRAYSCALE);
                 label->setPixmap(QPixmap::fromImage(newImage));
             }
+            break;
+        }
+        case (ImageType::BINARY): {
+            Binary * b = binaries.at(imageIdx);
+            Grayscale prev(*b);
+            QImage image = this->fromGrayscale(prev);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+
+            if (result == QDialog::Accepted) {
+                binaries.erase(binaries.begin() + imageIdx);
+                int newIdx = this->getVectorIdx(idx, ImageType::GRAYSCALE);
+                grayscales.insert(grayscales.begin() + newIdx, new Grayscale(prev));
+                QImage newImage = fromGrayscale(prev);
+                tabPage->setImageType(ImageType::GRAYSCALE);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }
@@ -2277,6 +2297,104 @@ void MainWindow::on_actionThinning_triggered()
             break;
         } default : {
             errorMessage("Cannot used for Binary");
+            break;
+        }
+    }
+}
+
+void MainWindow::on_actionNumber_Plate_Detector_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b4 = binaries.at(imageIdx);
+            Grayscale box = b4->cclTwoPass();
+
+//            Binary b5 = b4->boundaryBoxPlate(&box, 0.7, 0.2);
+
+            QImage image = this->fromBinary(*b4);
+//            QImage image = this->fromGrayscale(box);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+                QImage newImage = fromBinary(*b4);
+                tabPage->setImageType(ImageType::BINARY);
+                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+
+            break;
+        }
+        case (ImageType::TRUECOLOR) : {
+            Truecolor * tr = truecolors.at(imageIdx);
+            Grayscale g1 = tr->toGrayscale();
+            Binary b1 = g1.binarySegmentation(80);
+
+            Grayscale g2(b1);
+            Binary b2 = g2.edgeDetection(EdgeDetection::GRADIENT, 1, 1);
+
+            float ** kernel = Monochrome::initPixel(3, 3);
+            kernel[0][0] = 1; kernel[0][1] = 1;  kernel[0][2] = 1;
+            kernel[1][0] = 1; kernel[1][1] = 1; kernel[1][2] = 1;
+            kernel[2][0] = 1; kernel[2][1] = 1;  kernel[2][2] = 1;
+
+
+//            Binary b3 = b2.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel);
+            Binary b3a = b2.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel);
+
+//            Binary b4 = b3a.thinning();
+
+            Grayscale box = b3a.cclTwoPass();
+
+            int max_count = 0;
+            int max_index = 0;
+
+            vector<Monochrome*> vecMon = b3a.boundaryBox(&box, &g1, 4, 2.5);
+            for (int i = 0; i < vecMon.size(); i++) {
+                Grayscale g_temp(*vecMon[i]);
+                Binary b_temp = g_temp.binarySegmentation(80);
+                Grayscale box_temp = b_temp.cclTwoPass();
+
+                int count = b_temp.boundaryBoxCount(&box_temp, 0.7, 0.2);
+
+                if (max_count < count) {
+                    max_count = count;
+                    max_index = i;
+                }
+
+                qInfo(("count : " + to_string(count)).c_str());
+            }
+
+//            QImage image = this->fromBinary(b5);
+
+            Grayscale g_a1(*vecMon[max_index]);
+
+            Binary b_a1 = g_a1.binarySegmentation(80);
+            Grayscale box_2 = b_a1.cclTwoPass();
+
+            vector<Monochrome*> vecMon2 = b_a1.boundaryBoxPlate(&box_2, 0.7, 0.2);
+
+            qInfo(to_string(vecMon2.size()).c_str());
+
+            QImage image = this->fromGrayscale(*vecMon2[0]);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+//                truecolors.erase(truecolors.begin() + imageIdx);
+//                int newIdx = this->getVectorIdx(idx, ImageType::BINARY);
+//                binaries.insert(binaries.begin() + newIdx, new Binary(b5));
+//                QImage newImage = fromBinary(b5);
+//                tabPage->setImageType(ImageType::BINARY);
+//                label->setPixmap(QPixmap::fromImage(newImage));
+            }
             break;
         }
     }

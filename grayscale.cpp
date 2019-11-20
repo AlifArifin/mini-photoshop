@@ -137,6 +137,10 @@ Grayscale::Grayscale(const Monochrome & monochrome) : Monochrome(monochrome) {
 
 }
 
+Grayscale::Grayscale(const Binary & binary) : Monochrome(binary) {
+    this->imageType = ImageType::GRAYSCALE;
+}
+
 Grayscale Grayscale::contrastStretching(int a, int b, int ya, int yb, float alpha, float beta, float gamma) {
     qInfo("contrast");
     Grayscale gNew(

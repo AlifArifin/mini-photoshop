@@ -206,11 +206,18 @@
     <addaction name="actionRoberts"/>
     <addaction name="actionCanny"/>
    </widget>
+   <widget class="QMenu" name="menuAnalyze">
+    <property name="title">
+     <string>Analyze</string>
+    </property>
+    <addaction name="actionNumber_Plate_Detector"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOperations"/>
    <addaction name="menuHistogram"/>
    <addaction name="menuEnhancement"/>
    <addaction name="menuEdge_Detection"/>
+   <addaction name="menuAnalyze"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -529,6 +536,11 @@
   <action name="actionThinning">
    <property name="text">
     <string>Thinning</string>
+   </property>
+  </action>
+  <action name="actionNumber_Plate_Detector">
+   <property name="text">
+    <string>Number Plate Detector</string>
    </property>
   </action>
  </widget>

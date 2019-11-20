@@ -10,6 +10,7 @@
 #include "convolution.h"
 #include "edge_detection.h"
 #include "padding.h"
+#include <vector>
 
 class Monochrome : public Image {
 protected:
@@ -21,6 +22,7 @@ public:
     Monochrome(ImageFormat imageFormat, ImageType imageType);
     Monochrome(ImageFormat imageFormat, ImageType imageType, Resolution resolution, short level);
     Monochrome(const Monochrome & monochrome);
+    Monochrome(const Monochrome & monochrome, Resolution resTop, Resolution resBot);
     ~Monochrome();
 
     // getter setter
@@ -49,6 +51,10 @@ public:
     Monochrome histogramLeveling();
     Monochrome histogramSpecification(Histogram h);
     Monochrome zoom(bool in);
+    vector<Monochrome*> boundaryBox(Monochrome * m, Monochrome * real, float rat_top, float rat_bot);
+    vector<Monochrome*> boundaryBoxPlate(Monochrome * m, float rat_top, float rat_bot);
+    int boundaryBoxCount(Monochrome * m, float rat_top, float rat_bot);
+    Monochrome resizePixels(Monochrome * m, Resolution res);
 };
 
 #endif

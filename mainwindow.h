@@ -149,6 +149,8 @@ private slots:
 
     void on_actionThinning_triggered();
 
+    void on_actionNumber_Plate_Detector_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;
