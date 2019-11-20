@@ -52,9 +52,10 @@ public:
     Monochrome histogramSpecification(Histogram h);
     Monochrome zoom(bool in);
     vector<Monochrome*> boundaryBox(Monochrome * m, Monochrome * real, float rat_top, float rat_bot);
+    Monochrome showBoundaryBox(Monochrome * m, float rat_top, float rat_bot);
     vector<Monochrome*> boundaryBoxPlate(Monochrome * m, float rat_top, float rat_bot);
     int boundaryBoxCount(Monochrome * m, float rat_top, float rat_bot);
-    Monochrome resizePixels(Monochrome * m, Resolution res);
+    Monochrome resizePixels(Resolution res);
 };
 
 #endif

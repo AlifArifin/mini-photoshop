@@ -17,6 +17,7 @@ public:
     Binary Not();
     Binary thinning();
     Monochrome cclTwoPass();
+    Binary reverseFormat();
 };
 
 #endif

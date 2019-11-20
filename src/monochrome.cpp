@@ -20,7 +20,6 @@ Monochrome::Monochrome() {
 }
 
 Monochrome::Monochrome(const Monochrome & monochrome) : Image(monochrome) {
-    qInfo("lalala");
     this->level = monochrome.level;
     this->pixel = new short*[this->resolution.height];
     for (int i = 0; i < this->resolution.height; i++) {
@@ -38,7 +37,6 @@ Monochrome::Monochrome(const Monochrome & monochrome, Resolution resTop, Resolut
 
     this->resolution = newRes;
 
-    qInfo("lalala");
     this->level = monochrome.level;
     this->pixel = new short*[this->resolution.height];
     for (int i = 0; i < this->resolution.height; i++) {
@@ -632,6 +630,76 @@ Monochrome Monochrome::zoom(bool in) {
     }
 }
 
+Monochrome Monochrome::showBoundaryBox(Monochrome * m, float rat_top, float rat_bot) {
+    qInfo("boundary box");
+    if (!Image::sameResolution(this->resolution, m->resolution)) {
+        throw "Images have different resolution";
+    }
+
+    Monochrome mNew(*this);
+
+    short ** box = new short*[m->level];
+    for (int i = 0; i < m->level; i++) {
+        box[i] = new short[4];
+        for (int j = 0; j < 4; j++) {
+            box[i][j] = -1;
+        }
+    }
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            if (m->pixel[i][j] != 0) {
+                short t = m->pixel[i][j];
+                // qInfo(to_string(t).c_str());
+                if (box[t][0] == -1) {
+                    box[t][0] = i;
+                    box[t][1] = j;
+                    box[t][2] = i;
+                    box[t][3] = j;
+                }
+                
+                if (box[t][0] > i) {
+                    box[t][0] = i;
+                }
+
+                if (box[t][1] > j) {
+                    box[t][1] = j;
+                }
+
+                if (box[t][2] < i) {
+                    box[t][2] = i;
+                }
+
+                if (box[t][3] < j) {
+                    box[t][3] = j;
+                }
+            }
+        }
+    }
+
+    for (int k = 0; k < m->level; k++) {
+        if (box[k][0] != -1) {
+            // qInfo((to_string(box[k][0]) + " " + to_string(box[k][2])).c_str());
+            float ratio = (float) (box[k][3] - box[k][1]) / (box[k][2] - box[k][0]);
+            if ((ratio > rat_bot && ratio < rat_top) || (rat_bot < 0)) {
+                for (int i = box[k][0]; i <= box[k][2]; i++) {
+                    for (int j = box[k][1]; j <= box[k][3]; j++) {
+                        if (i == box[k][0] || i == box[k][2]) {
+                            mNew.pixel[i][j] = 1;
+                        }
+                        if (j == box[k][1] || j == box[k][3]) {
+                            mNew.pixel[i][j] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return mNew;   
+}
+
+
 vector<Monochrome*> Monochrome::boundaryBox(Monochrome * m, Monochrome * real, float rat_top, float rat_bot) {
     qInfo("boundary box");
     if (!Image::sameResolution(this->resolution, m->resolution)) {
@@ -725,7 +793,7 @@ int Monochrome::boundaryBoxCount(Monochrome * m, float rat_top, float rat_bot) {
         throw "Images have different resolution";
     }
 
-    int middle = this->resolution.height / 2;
+    int middle = this->resolution.height / 3;
 
     Monochrome mNew(*this);
 
@@ -798,7 +866,7 @@ vector<Monochrome*> Monochrome::boundaryBoxPlate(Monochrome * m, float rat_top, 
         throw "Images have different resolution";
     }
 
-    int middle = this->resolution.height / 2;
+    int middle = this->resolution.height / 3;
 
     Monochrome mNew(*this);
 
@@ -851,6 +919,7 @@ vector<Monochrome*> Monochrome::boundaryBoxPlate(Monochrome * m, float rat_top, 
     
     vector<Monochrome*> vec;
     vector<int> res_width;
+    vector<int> boun_height;
 
     for (int k = 0; k < m->level; k++) {
         if (box[k][0] != -1) {
@@ -872,11 +941,46 @@ vector<Monochrome*> Monochrome::boundaryBoxPlate(Monochrome * m, float rat_top, 
                 resTop.width = box[k][1];
                 resBot.height = box[k][2];
                 resBot.width = box[k][3];
+
                 vec.push_back(new Monochrome(*this, resTop, resBot));
                 res_width.push_back(resTop.width);
+                boun_height.push_back(resBot.height - resTop.height);
             }
         }
     }
+
+    qInfo("boundary box");
+
+    vector<int> deletedIndex;
+
+    int boun_size = boun_height.size() - 1;
+
+    if (boun_size > 0) {
+        for (int i = boun_height.size() - 1; i >= 0; i--) {
+            int count = 0;
+            for (int j = 0; j < boun_height.size(); j++) {
+                count += abs (boun_height[i] - boun_height[j]);
+            }
+
+            qInfo(to_string(count / boun_size).c_str());
+            qInfo(to_string(this->resolution.height / 5).c_str());
+
+            if (count / boun_size > (this->resolution.height / 5)) {
+                deletedIndex.push_back(i);
+            }
+        }
+    }
+
+    qInfo("boundary box");
+
+    for (int i = 0; i < deletedIndex.size(); i++) {
+        vec.erase(vec.begin() + deletedIndex[i]);
+        res_width.erase(res_width.begin() + deletedIndex[i]);
+    }
+
+    
+
+    qInfo("boundary box");
 
     vector<Monochrome*> vec2;
     
@@ -894,6 +998,7 @@ vector<Monochrome*> Monochrome::boundaryBoxPlate(Monochrome * m, float rat_top, 
                 min_idx = i;
             }
         }
+
         vec2.push_back(vec[min_idx]);
         vec.erase(vec.begin() + min_idx);
         res_width.erase(res_width.begin() + min_idx);
@@ -904,7 +1009,7 @@ vector<Monochrome*> Monochrome::boundaryBoxPlate(Monochrome * m, float rat_top, 
     return vec2;
 }
 
-Monochrome Monochrome::resizePixels(Monochrome * m, Resolution res) {
+Monochrome Monochrome::resizePixels(Resolution res) {
     Monochrome mNew(
         this->imageFormat,
         this->imageType,
@@ -918,12 +1023,14 @@ Monochrome Monochrome::resizePixels(Monochrome * m, Resolution res) {
     //int x_ratio = (int)((w1<<16)/w2) ;
     //int y_ratio = (int)((h1<<16)/h2) ;
     int x2, y2 ;
+
     for (int i = 0;i < res.height; i++) {
         for (int j = 0; j < res.width; j++) {
             x2 = ((j * x_ratio)>>16) ;
             y2 = ((i * y_ratio)>>16) ;
-            mNew.pixel[i * res.width][j] = this->pixel[y2 * res.height][x2] ;
+            mNew.pixel[i][j] = this->pixel[y2][x2] ;
         }                
-    }                
+    }               
+
     return mNew;
 }

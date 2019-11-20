@@ -277,24 +277,20 @@ Binary Grayscale::edgeDetection(EdgeDetection e, int t, int c) {
 
     switch (e) {
         case (EdgeDetection::GRADIENT) : {
-            qInfo("edge detection gradient");
             kernelx = Monochrome::initPixel(2, 1);
             kernelx[0][0] = -1; kernelx[1][0] = 1;
             Grayscale x = this->convolutionTopLeft(Convolution::NO_CLIPPING, 2, 1, kernelx);
 
             qInfo(to_string(x.pixel[0][0]).c_str());
 
-            qInfo("edge detection gradient");
             kernely = Monochrome::initPixel(1, 2);
             kernely[0][0] = -1; kernely[0][1] = 1;
             Grayscale y = this->convolutionTopLeft(Convolution::NO_CLIPPING, 1, 2, kernely);
 
             qInfo(to_string(y.pixel[0][0]).c_str());
 
-            qInfo("edge detection gradient");
             Grayscale mNew = x.operation(&y, Operation::ADD_ABS, this->level);
 
-            qInfo("edge detection gradient");
             for (int i = 0; i < mNew.resolution.height; i++) {
                 for (int j = 0; j < mNew.resolution.width; j++) {
                     if (mNew.pixel[i][j] >= t) {
@@ -305,7 +301,6 @@ Binary Grayscale::edgeDetection(EdgeDetection e, int t, int c) {
                 }
             }
 
-            qInfo("edge detection gradient");
             for (int i = 0; i < 2; i++) {
                 delete [] kernelx[i];
             }
@@ -316,7 +311,6 @@ Binary Grayscale::edgeDetection(EdgeDetection e, int t, int c) {
             }
             delete [] kernely;
 
-            qInfo("edge detection gradient");
             break;
         }
         case (EdgeDetection::LAPLACE) : {
@@ -344,8 +338,6 @@ Binary Grayscale::edgeDetection(EdgeDetection e, int t, int c) {
                 }
             }
 
-            qInfo("lalala");
-
             // y
             for (int j = 0; j < mNew.resolution.width; j++) {
                 for (int i = 0; i < mNew.resolution.height; i++) {
@@ -357,8 +349,6 @@ Binary Grayscale::edgeDetection(EdgeDetection e, int t, int c) {
                     pxl_bef = mNew.pixel[i][j];
                 }
             }
-
-            qInfo("lalala");
 
             for (int i = 0; i < 3; i++) {
                 delete [] kernelx[i];

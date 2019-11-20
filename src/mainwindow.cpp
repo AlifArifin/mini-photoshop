@@ -16,6 +16,7 @@
 #include "formcontrast.h"
 #include "formtransformationlog.h"
 #include "formgrayslicing.h"
+#include "formresize.h"
 #include "bitplane.h"
 #include "dialoghistogram.h"
 #include "convolution.h"
@@ -2334,28 +2335,59 @@ void MainWindow::on_actionNumber_Plate_Detector_triggered()
         case (ImageType::TRUECOLOR) : {
             Truecolor * tr = truecolors.at(imageIdx);
             Grayscale g1 = tr->toGrayscale();
+
             Binary b1 = g1.binarySegmentation(80);
-
             Grayscale g2(b1);
+
+            Grayscale g_3 = g1.negative();
+            Binary b_13 = g_3.binarySegmentation(80);
+            Grayscale g2_3(b_13);
+
+            Binary b22 = g1.edgeDetection(EdgeDetection::PREWITT, 250, 1);
+//            Binary b22 = g1.edgeDetection(EdgeDetection::ROBERTS, 150, 1);
+//            Binary b2 = g1.edgeDetection(EdgeDetection::CANNY, 100, 1);
             Binary b2 = g2.edgeDetection(EdgeDetection::GRADIENT, 1, 1);
+//            Binary b2 = b1;
+            Binary b2_3 = g2_3.edgeDetection(EdgeDetection::GRADIENT, 1, 1);
 
-            float ** kernel = Monochrome::initPixel(3, 3);
-            kernel[0][0] = 1; kernel[0][1] = 1;  kernel[0][2] = 1;
-            kernel[1][0] = 1; kernel[1][1] = 1; kernel[1][2] = 1;
-            kernel[2][0] = 1; kernel[2][1] = 1;  kernel[2][2] = 1;
+            float ** kernel2 = Monochrome::initPixel(3, 3);
+            kernel2[0][0] = 1; kernel2[0][1] = 1;  kernel2[0][2] = 1;
+            kernel2[1][0] = 1; kernel2[1][1] = 1; kernel2[1][2] = 1;
+            kernel2[2][0] = 1; kernel2[2][1] = 1;  kernel2[2][2] = 1;
 
 
-//            Binary b3 = b2.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel);
-            Binary b3a = b2.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel);
+//            Binary b4 = b2.thinning();
 
-//            Binary b4 = b3a.thinning();
+//
+            Binary b3a = b2.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel2);
+            Binary b3a_3 = b2_3.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel2);
+
+//            Binary b23 = b22.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel2);
+            Binary b3a2 = b22.convolution(Convolution::BASIC, Padding::ZERO, 3, kernel2);
+
+            QImage image = this->fromBinary(b2_3);
+
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            imagePreview.exec();
 
             Grayscale box = b3a.cclTwoPass();
+            Grayscale box2 = b3a2.cclTwoPass();
+            Grayscale box_3 = b3a_3.cclTwoPass();
 
             int max_count = 0;
             int max_index = 0;
 
+            int max_count_2 = 0;
+            int max_index_2 = 0;
+
+            int max_count_3 = 0;
+            int max_index_3 = 0;
+
             vector<Monochrome*> vecMon = b3a.boundaryBox(&box, &g1, 4, 2.5);
+            vector<Monochrome*> vecMon_2 = b3a2.boundaryBox(&box2, &g1, 4, 2.5);
+            vector<Monochrome*> vecMon_3 = b3a_3.boundaryBox(&box_3, &g_3, 4, 2.5);
+
             for (int i = 0; i < vecMon.size(); i++) {
                 Grayscale g_temp(*vecMon[i]);
                 Binary b_temp = g_temp.binarySegmentation(80);
@@ -2367,35 +2399,301 @@ void MainWindow::on_actionNumber_Plate_Detector_triggered()
                     max_count = count;
                     max_index = i;
                 }
+            }
 
-                qInfo(("count : " + to_string(count)).c_str());
+            for (int i = 0; i < vecMon_2.size(); i++) {
+                Grayscale g_temp(*vecMon_2[i]);
+                Binary b_temp = g_temp.binarySegmentation(200);
+                Grayscale box_temp = b_temp.cclTwoPass();
+
+                int count = b_temp.boundaryBoxCount(&box_temp, 0.7, 0.2);
+
+                if (max_count_2 < count) {
+                    max_count_2 = count;
+                    max_index_2 = i;
+                }
+            }
+
+            for (int i = 0; i < vecMon_3.size(); i++) {
+                Grayscale g_temp(*vecMon_3[i]);
+                Binary b_temp = g_temp.binarySegmentation(200);
+                Grayscale box_temp = b_temp.cclTwoPass();
+
+                int count = b_temp.boundaryBoxCount(&box_temp, 0.7, 0.2);
+
+                if (max_count_3 < count) {
+                    max_count_3 = count;
+                    max_index_3 = i;
+                }
             }
 
 //            QImage image = this->fromBinary(b5);
 
             Grayscale g_a1(*vecMon[max_index]);
+            Grayscale g_a1_2(*vecMon_2[max_index_2]);
+            Grayscale g_a1_3(*vecMon_3[max_index_3]);
+
+            int counter = 0;
+            for (int i = 0; i < g_a1.getResolution().height; i++) {
+                for (int j = 0; j < g_a1.getResolution().width; j++) {
+                    if (g_a1.getIndividualPixel(i, j) < 130) {
+                        counter++;
+                    } else {
+                        counter--;
+                    }
+                }
+            }
+
+            image = this->fromGrayscale(g_a1_2);
+
+            imagePreview.setImage(image);
+            imagePreview.exec();
+
+            image = this->fromGrayscale(g_a1_3);
+            imagePreview.setImage(image);
+            imagePreview.exec();
 
             Binary b_a1 = g_a1.binarySegmentation(80);
             Grayscale box_2 = b_a1.cclTwoPass();
 
-            vector<Monochrome*> vecMon2 = b_a1.boundaryBoxPlate(&box_2, 0.7, 0.2);
+            Binary b_a1_2 = g_a1_2.binarySegmentation(200);
+            Grayscale box_2_2 = b_a1_2.cclTwoPass();
 
-            qInfo(to_string(vecMon2.size()).c_str());
+            Binary b_a1_3 = g_a1_3.binarySegmentation(80);
 
-            QImage image = this->fromGrayscale(*vecMon2[0]);
+            Binary b_a1_3s(b_a1_3.reverseFormat());
 
-            ImagePreview imagePreview(this);
+            Grayscale box_2_3 = b_a1_3s.cclTwoPass();
+
+            image = this->fromBinary(b_a1_2);
+
             imagePreview.setImage(image);
-            int result = imagePreview.exec();
-            if (result == QDialog::Accepted) {
+            imagePreview.exec();
+
+            image = this->fromBinary(b_a1_3s);
+
+            imagePreview.setImage(image);
+            imagePreview.exec();
+
+            vector<Monochrome*> vecMon2 = b_a1.boundaryBoxPlate(&box_2, 0.7, 0.15);
+            vector<Monochrome*> vecMon2_2 = b_a1_2.boundaryBoxPlate(&box_2_2, 0.7, 0.15);
+            vector<Monochrome*> vecMon2_3 = b_a1_3s.boundaryBoxPlate(&box_2_3, 0.7, 0.15);
+
+            Binary show_temp_2 = b_a1_2.showBoundaryBox(&box_2_2, 0.7, 0.15);
+            Binary show_temp_3 = b_a1_3s.showBoundaryBox(&box_2_3, 0.7, 0.15);
+
+            image = this->fromBinary(show_temp_2);
+
+            imagePreview.setImage(image);
+            imagePreview.exec();
+
+            image = this->fromBinary(show_temp_3);
+
+            imagePreview.setImage(image);
+            imagePreview.exec();
+
+            qInfo(("size vec mon 2 : " + to_string(vecMon2_2.size())).c_str());
+
+            string list_char[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+
+            vector<Binary*> vecChar;
+
+            Resolution resfinal;
+            resfinal.width = 50;
+            resfinal.height = 100;
+
+            for (int i = 0; i < 36; i++) {
+                string fname = "D:/ImageSample/char_bmp/" + list_char[i] + ".bmp";
+                qInfo(fname.c_str());
+                Truecolor chartr(fname, ImageFormat::BMP, ImageType::TRUECOLOR);
+                Grayscale chargr = chartr.toGrayscale();
+
+                Binary charbi = chargr.binarySegmentation(80);
+
+                Binary charre = charbi.resizePixels(resfinal);
+
+                QImage image2 = this->fromBinary(charre);
+
+                vecChar.push_back(new Binary(charre));
+            }
+
+            string plat = "";
+            string plat_2 = "";
+            string plat_3 = "";
+
+            for (int i = 0; i < vecMon2.size(); i++) {
+                qInfo(("index : " + to_string(i)).c_str());
+                Binary b_conv = vecMon2[i]->resizePixels(resfinal);
+                int min_error = -1;
+                int min_idx = -1;
+                for (int j = 0; j < 36; j++) {
+                    int curr_error = 0;
+                    qInfo(("index j : " + to_string(j)).c_str());
+                    for (int k = 0; k < resfinal.height; k++) {
+                        for (int l = 0; l < resfinal.width; l++) {
+//                            qInfo(("index k l : " + to_string(k) + " " + to_string(l)).c_str());
+//                            qInfo(to_string(b_conv.getIndividualPixel(k, l)).c_str());
+//                            qInfo(to_string(vecChar[j]->getIndividualPixel(k, l)).c_str());
+                            if (b_conv.getIndividualPixel(k, l) != vecChar[j]->getIndividualPixel(k, l)) {
+                                curr_error++;
+                            }
+                        }
+                    }
+                    if (min_error == -1) {
+                        min_error = curr_error;
+                        min_idx = j;
+                    }
+
+                    qInfo(("index j : " + to_string(curr_error)).c_str());
+                    if (curr_error < min_error) {
+                        min_error = curr_error;
+                        min_idx = j;
+                    }
+                }
+                if (min_error < 2500) {
+                    plat += list_char[min_idx];
+                }
+            }
+
+            for (int i = 0; i < vecMon2_2.size(); i++) {
+                qInfo(("index : " + to_string(i)).c_str());
+                Binary b_conv = vecMon2_2[i]->resizePixels(resfinal);
+                int min_error = -1;
+                int min_idx = -1;
+                for (int j = 0; j < 36; j++) {
+                    int curr_error = 0;
+                    for (int k = 0; k < resfinal.height; k++) {
+                        for (int l = 0; l < resfinal.width; l++) {
+//                            qInfo(("index k l : " + to_string(k) + " " + to_string(l)).c_str());
+//                            qInfo(to_string(b_conv.getIndividualPixel(k, l)).c_str());
+//                            qInfo(to_string(vecChar[j]->getIndividualPixel(k, l)).c_str());
+                            if (b_conv.getIndividualPixel(k, l) != vecChar[j]->getIndividualPixel(k, l)) {
+                                curr_error++;
+                            }
+                        }
+                    }
+                    if (min_error == -1) {
+                        min_error = curr_error;
+                        min_idx = j;
+                    }
+
+                    if (curr_error < min_error) {
+                        min_error = curr_error;
+                        min_idx = j;
+                    }
+                }
+                if (min_error < 2500) {
+                    plat_2 += list_char[min_idx];
+                }
+            }
+
+            for (int i = 0; i < vecMon2_3.size(); i++) {
+                qInfo(("index : " + to_string(i)).c_str());
+                Binary b_conv = vecMon2_3[i]->resizePixels(resfinal);
+                int min_error = -1;
+                int min_idx = -1;
+                for (int j = 0; j < 36; j++) {
+                    int curr_error = 0;
+                    for (int k = 0; k < resfinal.height; k++) {
+                        for (int l = 0; l < resfinal.width; l++) {
+//                            qInfo(("index k l : " + to_string(k) + " " + to_string(l)).c_str());
+//                            qInfo(to_string(b_conv.getIndividualPixel(k, l)).c_str());
+//                            qInfo(to_string(vecChar[j]->getIndividualPixel(k, l)).c_str());
+                            if (b_conv.getIndividualPixel(k, l) != vecChar[j]->getIndividualPixel(k, l)) {
+                                curr_error++;
+                            }
+                        }
+                    }
+                    if (min_error == -1) {
+                        min_error = curr_error;
+                        min_idx = j;
+                    }
+
+                    if (curr_error < min_error) {
+                        min_error = curr_error;
+                        min_idx = j;
+                    }
+                }
+                if (min_error < 2500) {
+                    plat_3 += list_char[min_idx];
+                }
+            }
+
+            qInfo(("first plate : " + plat).c_str());
+            qInfo(("second plate : " + plat_2).c_str());
+            qInfo(("second plate : " + plat_3).c_str());
+
+            string final_plat;
+            if (plat_2.length() > plat.length()) {
+                if (plat_3.length() > plat_2.length()) {
+                    final_plat = plat_3;
+                } else {
+                    final_plat = plat_2;
+                }
+            } else {
+                if (plat_3.length() > plat.length()) {
+                    final_plat = plat_3;
+                } else {
+                    final_plat = plat;
+                }
+            }
+
+            QMessageBox msgBox;
+            string messagePlat = "Plat nomor : " + final_plat;
+            msgBox.setText(messagePlat.c_str());
+            msgBox.exec();
+
+//            if (result == QDialog::Accepted) {
 //                truecolors.erase(truecolors.begin() + imageIdx);
 //                int newIdx = this->getVectorIdx(idx, ImageType::BINARY);
 //                binaries.insert(binaries.begin() + newIdx, new Binary(b5));
 //                QImage newImage = fromBinary(b5);
 //                tabPage->setImageType(ImageType::BINARY);
 //                label->setPixmap(QPixmap::fromImage(newImage));
-            }
+//            x}
             break;
+        }
+    }
+}
+
+void MainWindow::on_actionResize_triggered()
+{
+    FormResize form(this);
+    form.setWindowTitle("Resize");
+    int result = form.exec();
+
+    qInfo("after form");
+
+    if (result == QDialog::Accepted) {
+        QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+        int idx = tabWidget->currentIndex();
+        TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+        QLabel * label = tabPage->findChild<QLabel*>("label");
+        int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+        switch (tabPage->getImageType()) {
+            case (ImageType::BINARY) : {
+                Binary * b = binaries.at(imageIdx);
+
+                Resolution res;
+                res.height = form.getHeight();
+                res.width = form.getWidth();
+
+                Binary b2 = b->resizePixels(res);
+
+                QImage image = this->fromBinary(b2);
+
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+
+                if (result == QDialog::Accepted) {
+                    binaries.at(imageIdx) = new Binary(b2);
+                    QImage newImage = fromBinary(b2);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            }
         }
     }
 }

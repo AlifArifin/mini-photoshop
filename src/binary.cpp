@@ -174,7 +174,7 @@ Monochrome Binary::cclTwoPass() {
     set<short>::iterator it;
 
     qInfo("ccl");
-    
+
     // first pass
     for (int i = 0; i < this->resolution.height; i++) {
         for (int j = 0; j < this->resolution.width; j++) {            
@@ -256,4 +256,24 @@ Monochrome Binary::cclTwoPass() {
     labels.setLevel(currlabel);
 
     return labels;
+}
+
+
+Binary Binary::reverseFormat() {
+    int count_white = 0;
+    for (int i = 0; i < this->getResolution().height; i++) {
+        for (int j = 0; j < this->getResolution().width; j++) {
+            if (this->getIndividualPixel(i, j) == 1) {
+                count_white++;
+            }
+        }
+    }
+
+    if ((float) count_white / (this->getResolution().height * this->getResolution().width) > 0.5) {
+        Binary lala = this->negative();
+        return lala;
+    } else {
+        Binary lala(*this);
+        return lala;
+    }
 }
