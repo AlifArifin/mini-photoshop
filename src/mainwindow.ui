@@ -195,11 +195,18 @@
     <addaction name="actionUnsharp_Masking"/>
     <addaction name="actionHighboost_Filter"/>
     <addaction name="separator"/>
+    <addaction name="actionGaussian_Smoothing"/>
    </widget>
    <widget class="QMenu" name="menuEdge_Detection">
     <property name="title">
      <string>E&amp;dge Detection</string>
     </property>
+    <widget class="QMenu" name="menuHough_Transformation">
+     <property name="title">
+      <string>Hough Transformation</string>
+     </property>
+     <addaction name="actionLine"/>
+    </widget>
     <addaction name="actionGradient"/>
     <addaction name="actionLaplace"/>
     <addaction name="actionLaplace_of_Gaussian"/>
@@ -207,6 +214,8 @@
     <addaction name="actionPrewitt"/>
     <addaction name="actionRoberts"/>
     <addaction name="actionCanny"/>
+    <addaction name="separator"/>
+    <addaction name="menuHough_Transformation"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">
     <property name="title">
@@ -548,6 +557,16 @@
   <action name="actionResize">
    <property name="text">
     <string>Resize</string>
+   </property>
+  </action>
+  <action name="actionGaussian_Smoothing">
+   <property name="text">
+    <string>Gaussian Smoothing</string>
+   </property>
+  </action>
+  <action name="actionLine">
+   <property name="text">
+    <string>Line</string>
    </property>
   </action>
  </widget>

@@ -1034,3 +1034,106 @@ Monochrome Monochrome::resizePixels(Resolution res) {
 
     return mNew;
 }
+
+Monochrome Monochrome::hough(int threshold) {
+    Resolution res_P;
+    res_P.height = 301;
+    res_P.width = 181;
+
+    Monochrome P(
+        ImageFormat::NONE,
+        ImageType::GRAYSCALE,
+        res_P,
+        255
+    );
+
+    float DEG2RAD = 3.14159265/180;
+    
+    // init sin and cos
+    float * t_sin = new float[181];
+    float * t_cos = new float[181];
+    for (int i = 0; i < res_P.height; i++) {
+        t_sin[i] = sin((i * 180.0 / (res_P.height - 1) - 90) * DEG2RAD);
+        t_cos[i] = cos((i * 180.0 / (res_P.height - 1) - 90) * DEG2RAD);
+    }
+
+    float SQRTD = sqrt(pow(this->resolution.width, 2) + pow(this->resolution.height, 2));
+
+    int max_l = 0;
+
+    for (int i = 0; i < this->resolution.height; i++) {
+        for (int j = 0; j < this->resolution.width; j++) {
+            if (this->pixel[i][j] == 1) {
+                for (int k = 0; k < res_P.height; k++) {
+                    float r = i * t_cos[k] + j * t_sin[k];
+                    float b = SQRTD;
+                    r += b; r /= (SQRTD * 2.0); r *= (res_P.width - 1); r += 0.5;
+                    int l = floor(r);
+                    
+                    if (max_l < l) {
+                        max_l = l;
+                    }
+
+                    P.pixel[k][l]++;
+                }
+            }
+        }
+    }
+
+    Monochrome bp (
+        ImageFormat::NONE,
+        ImageType::BINARY,
+        res_P,
+        1
+    );
+
+    int max2 = 0;
+
+    for (int i = 0; i < res_P.height; i++) {
+        for (int j = 0; j < res_P.width; j++) {
+            if (P.pixel[i][j] > max2) {
+                max2 = P.pixel[i][j];
+            }
+            if (P.pixel[i][j] > threshold) {
+                bp.pixel[i][j] = 1;
+            } else {
+                bp.pixel[i][j] = 0;
+            }
+        }
+    }
+
+    qInfo(to_string(max2).c_str());
+    Monochrome res(
+        ImageFormat::NONE,
+        ImageType::BINARY,
+        this->resolution,
+        1
+    );
+
+    for (int i = 0; i < res_P.height; i++) {
+        for (int j = 0; j < res_P.width; j++) {
+            float y = 0;
+            if (bp.pixel[i][j] == 1) {
+                for (int k = 0; k < this->resolution.height; k++) {
+                    float r = j * 2.0 * SQRTD / (res_P.width - 1) - SQRTD;
+                    if (t_sin[i] <= 0.0000001 && t_sin[i] >= - 0.0000001) {
+                        y += 1;
+                    } else {
+                        y = (r - k * t_cos[i]) / t_sin[i];
+                    }
+
+                    y += 0.5; 
+                    int l = floor(y);
+
+                    if (l >= 0 && l < this->resolution.width) {
+                        if (this->pixel[k][l] == 1) {
+                            res.pixel[k][l] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return res;
+}

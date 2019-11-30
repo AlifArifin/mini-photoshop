@@ -7,6 +7,7 @@ SOURCES += \
     binary.cpp \
     bitplane.cpp \
     dialoghistogram.cpp \
+    formcanny.cpp \
     formcontrast.cpp \
     formgrayslicing.cpp \
     formresize.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 FORMS += \
     bitplane.ui \
     dialoghistogram.ui \
+    formcanny.ui \
     formcontrast.ui \
     formgrayslicing.ui \
     formresize.ui \
@@ -48,6 +50,7 @@ HEADERS += \
     convolution.h \
     dialoghistogram.h \
     edge_detection.h \
+    formcanny.h \
     formcontrast.h \
     formgrayslicing.h \
     formresize.h \

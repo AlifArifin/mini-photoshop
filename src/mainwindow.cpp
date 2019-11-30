@@ -25,6 +25,7 @@
 #include "ppm_state.h"
 #include "formtranslation.h"
 #include "formsobel.h"
+#include "formcanny.h"
 #include <QFileDialog>
 #include <QTabBar>
 #include <QTabWidget>
@@ -2109,7 +2110,7 @@ void MainWindow::on_actionSave_triggered()
     }
 }
 
-void MainWindow::edgeDetection(EdgeDetection e, int t, int c) {
+void MainWindow::edgeDetection(EdgeDetection e, int t, int c, float lowT, float highT, float sigma) {
     QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
     int idx = tabWidget->currentIndex();
     TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
@@ -2122,7 +2123,7 @@ void MainWindow::edgeDetection(EdgeDetection e, int t, int c) {
             break;
         } case (ImageType::GRAYSCALE) : {
             Grayscale * g = grayscales.at(imageIdx);
-            Binary b = g->edgeDetection(e, t, c);
+            Binary b = g->edgeDetection(e, t, c, lowT, highT, sigma);
 
             QImage image = this->fromBinary(b);
             ImagePreview imagePreview(this);
@@ -2156,7 +2157,12 @@ void MainWindow::on_actionGradient_triggered()
 
 void MainWindow::on_actionLaplace_triggered()
 {
-    this->edgeDetection(EdgeDetection::LAPLACE);
+    try {
+        int t = inputInt("Edge detection laplace", "Insert threshold");
+        this->edgeDetection(EdgeDetection::LAPLACE, t);
+    } catch (const char* msg) {
+        // do nothing
+    }
 }
 
 void MainWindow::on_actionLaplace_of_Gaussian_triggered()
@@ -2202,17 +2208,14 @@ void MainWindow::on_actionRoberts_triggered()
 
 void MainWindow::on_actionCanny_triggered()
 {
-    formsobel form(this);
+    FormCanny form(this);
     form.setWindowTitle("Edge detection Canny");
     int result = form.exec();
 
     qInfo("after form");
 
     if (result == QDialog::Accepted) {
-        qInfo(to_string(form.getThreshold()).c_str());
-        qInfo(to_string(form.getC()).c_str());
-
-        this->edgeDetection(EdgeDetection::CANNY, form.getThreshold(), form.getC());
+        this->edgeDetection(EdgeDetection::CANNY, 1, form.getC(), form.getLowThreshold(), form.getHighThreshold(), form.getSigma());
     }
 }
 
@@ -2694,6 +2697,69 @@ void MainWindow::on_actionResize_triggered()
                 }
                 break;
             }
+        }
+    }
+}
+
+void MainWindow::on_actionGaussian_Smoothing_triggered()
+{
+    try {
+        float s = inputFloat("Gaussian Smoothing", "Insert sigma");
+
+        QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+        int idx = tabWidget->currentIndex();
+        TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+        QLabel * label = tabPage->findChild<QLabel*>("label");
+        int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+        switch (tabPage->getImageType()) {
+            case (ImageType::GRAYSCALE) : {
+                Grayscale * g = grayscales.at(imageIdx);
+                Grayscale prev = g->gaussianSmoothing(s);
+
+                QImage image = this->fromGrayscale(prev);
+
+                ImagePreview imagePreview(this);
+                imagePreview.setImage(image);
+                int result = imagePreview.exec();
+                if (result == QDialog::Accepted) {
+                    grayscales.at(imageIdx) = new Grayscale(prev);
+                    QImage newImage = fromMonochrome(prev);
+                    label->setPixmap(QPixmap::fromImage(newImage));
+                }
+                break;
+            }
+        }
+        //
+    } catch (const char* msg) {
+        // do nothing
+    }
+}
+
+void MainWindow::on_actionLine_triggered()
+{
+    QTabWidget* tabWidget = ui->centralwidget->findChild<QTabWidget*>("tabWidget");
+    int idx = tabWidget->currentIndex();
+    TabPage * tabPage = (TabPage *) tabWidget->widget(idx);
+    QLabel * label = tabPage->findChild<QLabel*>("label");
+
+    int imageIdx = this->getVectorIdx(idx, tabPage->getImageType());
+
+    switch (tabPage->getImageType()) {
+        case (ImageType::BINARY) : {
+            Binary * b = binaries.at(imageIdx);
+            Monochrome prev = b->hough(500);
+
+            QImage image = this->fromMonochrome(prev);
+            ImagePreview imagePreview(this);
+            imagePreview.setImage(image);
+            int result = imagePreview.exec();
+            if (result == QDialog::Accepted) {
+//                grayscales.at(imageIdx) = new Grayscale(prev);
+//                QImage newImage = fromMonochrome(prev);
+//                label->setPixmap(QPixmap::fromImage(newImage));
+            }
+            break;
         }
     }
 }

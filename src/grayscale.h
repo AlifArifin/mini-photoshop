@@ -20,9 +20,10 @@ public:
     Grayscale transformation(Transformation t, float c, float gamma = 1);
     Grayscale slicing(int a, int b, int max = 255);
     vector<Binary*> bitSlicing();
-    Binary edgeDetection(EdgeDetection e, int t = 100, int c = 1);
+    Binary edgeDetection(EdgeDetection e, int t = 100, int c = 1, float lowT = 0.05, float highT = 0.2, float sigma = 1);
     Binary binarySegmentation(int t);
-    
+    Grayscale gaussianSmoothing(float sigma);
+    Grayscale degreeEdgeDetection(EdgeDetection e, int t = 100, int c = 1);
 };
 
 #endif

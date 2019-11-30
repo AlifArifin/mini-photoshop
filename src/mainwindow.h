@@ -153,6 +153,10 @@ private slots:
 
     void on_actionResize_triggered();
 
+    void on_actionGaussian_Smoothing_triggered();
+
+    void on_actionLine_triggered();
+
 private:
     Ui::MainWindow *ui;
     QMainWindow * window;
@@ -178,7 +182,7 @@ private:
     QString inputComboBox(QString title, QString question, QStringList list);
     string inputString(QString title, QString question);
     void bitPlane(PPMColorState color = PPMColorState::RED);
-    void edgeDetection(EdgeDetection e, int t = 100, int c = 1);
+    void edgeDetection(EdgeDetection e, int t = 100, int c = 1, float lowT = 0.05, float highT = 0.09, float sigma = 1);
 };
 
 #endif // MAINWINDOW_H

@@ -56,6 +56,7 @@ public:
     vector<Monochrome*> boundaryBoxPlate(Monochrome * m, float rat_top, float rat_bot);
     int boundaryBoxCount(Monochrome * m, float rat_top, float rat_bot);
     Monochrome resizePixels(Resolution res);
+    Monochrome hough(int threshold);
 };
 
 #endif
