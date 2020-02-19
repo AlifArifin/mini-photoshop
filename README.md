@@ -46,6 +46,7 @@ What things you need to install the software
 
 ### Using
 Open Qt and choose `Tes2.pro` as a project and run it.
+You will need to import file first than do any operation that you want.
 
 ## Built With
 
